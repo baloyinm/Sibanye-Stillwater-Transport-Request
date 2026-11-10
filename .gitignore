@@ -1,0 +1,14 @@
+# Never commit these (the live site keeps them on the server only)
+.env
+.env.*
+!.env.example
+config.php
+**/config.php
+uploads/
+logs/
+*.tar.gz
+*.tar.gz.*
+*.zip
+*.sql.gz
+*.sqlite
+node_modules/
