@@ -1,6 +1,6 @@
 # CLAUDE.md: sibanye-stillwater-transport-request
 
-<!-- reuse-rule:start v1.3.0 — managed by baloyinm/Re-usable-Component/rules/reuse-rule.md; update it there, not here -->
+<!-- reuse-rule:start v1.6.0 — managed by baloyinm/Re-usable-Component/rules/reuse-rule.md; update it there, not here -->
 ## Re-usable components: check, reuse or modify, then build (Jarvis rule)
 
 The shared library is the private repo **baloyinm/Re-usable-Component** (`CATALOG.md` lists everything; `NAMING.md` sets names). Goal: more planning, less work. Nothing is built from scratch if a library component already does the job, or can be modified to do it.
@@ -20,6 +20,8 @@ The shared library is the private repo **baloyinm/Re-usable-Component** (`CATALO
 
 **While building**
 6. Build every BUILD part, and anything else that could be used again (a screen part, chart, template, script, connector, sync, scheduled-task prompt, business rule), as a self-contained, generic component: settings instead of hard-coded names, amounts or IDs.
+6a. **UI and UX are components too (v1.4.0, 10 Nov 2026).** A project with screens must also turn its reusable UI and UX parts (app shell, navigation, forms, tables, cards, status chips, dashboards, empty, loading and error states, theme tokens, phone layouts, print pages, accessibility fixes) into `ui/` components, with `ui/white-label-ui-kit` as the base (improve it, never a parallel kit). Run `ui/ux-audit-script` and `ui/theme-contrast-test` before you publish a screen, and say in the final summary which UI components were used, modified or added.
+6b. **Demo sign-in (v1.6.0, 11 Nov 2026).** A project with a sign-in and seeded demo users never writes its own demo picker: it USES `ui/demo-quick-login-panel` (server-action cards, or the 1.1.0 persona switcher for demos that only swap a mock session) so evaluators sign in with one click. Accounts and passwords stay on the server or are made up, it is switched on only on the demo deployment, and it is hidden behind `ui/test-tools-gate`. Not a Next.js app: port `src/demo-login.ts`, which is plain logic. A project with no sign-in writes `n/a` in `LIBRARY-LOG.md`.
 7. Name it by `NAMING.md`: `<area>/<subject>-<what-it-is>`, for example `ui/hud-donut-chart` or `integrations/markets-price-feed`.
 
 **When it works: commit to the library**
@@ -30,6 +32,8 @@ The shared library is the private repo **baloyinm/Re-usable-Component** (`CATALO
 11a. Test before you publish: run the component's example or tests; a component that was not run end to end goes in as `status: draft`.
 11b. One publisher at a time. Before any commit to the library, take the publish lock: pull, and if `.publish-lock` exists with an `expires` time still in the future and another holder, wait 5 minutes and check again (up to 6 times), then leave your components for the nightly sweep and say so. Otherwise write `.publish-lock` (`holder: <project> <session>`, `started`, `expires`: started + 60 minutes), commit `lock: <project> publishing` and push. If that push is refused because someone else pushed, pull and check the lock again. Commit your components one at a time (pull --rebase before each push), then delete `.publish-lock`, commit `unlock: <project>` and push. Never delete another holder's lock unless it has expired.
 11c. If you cannot publish today, leave a line in this repo's `LIBRARY-TODO.md` (`<date> · <part> · ADD/MODIFY <name> · why`): the nightly library sweep (`automations/library-publish-sweep-prompt`) picks it up, tests it and publishes it.
+
+11d. **Keep the log (v1.5.0, 10 Nov 2026).** Every project keeps `LIBRARY-LOG.md` in its repo root (template: `rules/library-log-template`): one line per library event (ADD, MODIFY or USE) with date, component, version, this project's commit and the library commit, plus a line under Re-audits each time it re-audits its past work. Add the line in the same commit as the change. The library's own matching log is `CONTRIBUTIONS.md`, built by `python3 tools/contrib-log.py --write` before every library commit.
 
 **At the end of each session**
 12. In your final summary, show the reuse check lines and list the components used, modified and added.
