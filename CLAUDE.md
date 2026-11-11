@@ -1,6 +1,6 @@
 # CLAUDE.md: sibanye-stillwater-transport-request
 
-<!-- reuse-rule:start v1.9.0 — managed by baloyinm/Re-usable-Component/rules/reuse-rule.md; update it there, not here -->
+<!-- reuse-rule:start v1.10.0 — managed by baloyinm/Re-usable-Component/rules/reuse-rule.md; update it there, not here -->
 ## Re-usable components: check, reuse or modify, then build (Jarvis rule)
 
 The shared library is the private repo **baloyinm/Re-usable-Component** (`CATALOG.md` lists everything; `NAMING.md` sets names). Goal: more planning, less work. Nothing is built from scratch if a library component already does the job, or can be modified to do it.
@@ -45,4 +45,8 @@ The shared library is the private repo **baloyinm/Re-usable-Component** (`CATALO
 H1. Start of every session: read your inbox file `docs/hub/inbox/<slug>.md` in `baloyinm/jarvis` (slug from `docs/hub/INDEX.md`). Action each `[OPEN]` line, mark it `[DONE I-nnn]` with the date, and report it in your status file.
 H2. After each piece of work: append one line to `docs/hub/status/<slug>.md` in `baloyinm/jarvis`: `- date time | DONE/OPEN/BLOCKED/DECISION-NEEDED | what | next | waiting on`. Add the same note to the matching Command Deck action. Nothing is assumed done, nothing goes to other people without Ntsakisi's OK, and no personal data, passwords or keys go in these files. A project that needs another project writes DECISION-NEEDED naming it; Jarvis turns that into an inbox line after his OK.
 H3. **Learning note (v1.9.0, 11 Nov 2026).** Ntsakisi wants to learn everything in development from the work. After each piece of work write a learning note into `docs/hub/learn/<slug>.md` in `baloyinm/jarvis`, in the format of `docs/hub/LEARNING-NOTE.md`: the plain-words version (no technical terms) AND the technical version, the problem solved, the idea and why it was chosen over an alternative, how it works step by step, how he can check it, the words explained, and what to learn next. End the status line with `learn: <title>`. Work without a note is not closed.
+**Better-way check (v1.10.0, 11 Nov 2026): protect Ntsakisi from doing things the hard way**
+B1. Before acting on any prompt that builds, changes, buys, schedules, deletes or sends something (skip pure questions and small edits), run the `better-way-check` skill: say the goal in one line, then ask five things. Is there a simpler way? Is there a built-in feature, library component or existing tool that already does it? Is it the cheapest in usage and money? Is it safe (security, privacy, hard to undo, goes to other people)? Does it solve the real problem or only the stated one?
+B2. If a better way exists, say it FIRST in at most four numbered lines: what he asked, the better way, why, and your recommendation, then ask which he wants. If his way is fine, write one line, "Checked: no better way", and go ahead. Never quietly do it the weaker way, never lecture, never block: it is his decision once he has been told.
+B3. Where he was told of a better way and chose his own, record it in one line in the project's status file (`DECISION: chose <his way> over <better way>`) so the choice is not re-argued.
 <!-- reuse-rule:end -->
