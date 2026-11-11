@@ -1,6 +1,6 @@
 # CLAUDE.md: sibanye-stillwater-transport-request
 
-<!-- reuse-rule:start v1.7.0 — managed by baloyinm/Re-usable-Component/rules/reuse-rule.md; update it there, not here -->
+<!-- reuse-rule:start v1.9.0 — managed by baloyinm/Re-usable-Component/rules/reuse-rule.md; update it there, not here -->
 ## Re-usable components: check, reuse or modify, then build (Jarvis rule)
 
 The shared library is the private repo **baloyinm/Re-usable-Component** (`CATALOG.md` lists everything; `NAMING.md` sets names). Goal: more planning, less work. Nothing is built from scratch if a library component already does the job, or can be modified to do it.
@@ -40,4 +40,9 @@ The shared library is the private repo **baloyinm/Re-usable-Component** (`CATALO
 12. In your final summary, show the reuse check lines and list the components used, modified and added.
 
 **New projects** get this section in their CLAUDE.md on day one, with the shared Jarvis token and model rules.
+
+**Jarvis hub (v1.8.0, 11 Nov 2026): projects report up and take instructions down**
+H1. Start of every session: read your inbox file `docs/hub/inbox/<slug>.md` in `baloyinm/jarvis` (slug from `docs/hub/INDEX.md`). Action each `[OPEN]` line, mark it `[DONE I-nnn]` with the date, and report it in your status file.
+H2. After each piece of work: append one line to `docs/hub/status/<slug>.md` in `baloyinm/jarvis`: `- date time | DONE/OPEN/BLOCKED/DECISION-NEEDED | what | next | waiting on`. Add the same note to the matching Command Deck action. Nothing is assumed done, nothing goes to other people without Ntsakisi's OK, and no personal data, passwords or keys go in these files. A project that needs another project writes DECISION-NEEDED naming it; Jarvis turns that into an inbox line after his OK.
+H3. **Learning note (v1.9.0, 11 Nov 2026).** Ntsakisi wants to learn everything in development from the work. After each piece of work write a learning note into `docs/hub/learn/<slug>.md` in `baloyinm/jarvis`, in the format of `docs/hub/LEARNING-NOTE.md`: the plain-words version (no technical terms) AND the technical version, the problem solved, the idea and why it was chosen over an alternative, how it works step by step, how he can check it, the words explained, and what to learn next. End the status line with `learn: <title>`. Work without a note is not closed.
 <!-- reuse-rule:end -->
