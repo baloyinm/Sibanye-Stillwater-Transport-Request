@@ -1,6 +1,6 @@
 # CLAUDE.md: sibanye-stillwater-transport-request
 
-<!-- reuse-rule:start v1.12.0 — managed by baloyinm/Re-usable-Component/rules/reuse-rule.md; update it there, not here -->
+<!-- reuse-rule:start v1.13.0 — managed by baloyinm/Re-usable-Component/rules/reuse-rule.md; update it there, not here -->
 ## Re-usable components: check, reuse or modify, then build (Jarvis rule)
 
 The shared library is the private repo **baloyinm/Re-usable-Component** (`CATALOG.md` lists everything; `NAMING.md` sets names). Goal: more planning, less work. Nothing is built from scratch if a library component already does the job, or can be modified to do it.
@@ -55,4 +55,7 @@ N1. After any substantial piece of work (a build, change, review, research, or a
 N2. Draw them from three places: the work just done (what is half-finished, untested or not verified), the project's open items in its status file and `LIBRARY-LOG.md`, and the library (`WHATS-NEW.md`, the improvement schedule, new components this project could use). Never invent one. If nothing is worth doing, write "No recommendation: nothing open".
 N3. Once per session add one line naming the biggest gap in the whole project, not only in this piece of work, then ask one question: which to do first.
 N4. Never raise a recommendation he declined again unless something has changed. Record each decline in the project's status file as `DECLINED: <what> (<date>)`. Nothing starts from a recommendation until he says yes, and nothing goes to other people without his OK.
+S1. Security checks must stay green. Before every push run gitleaks on your tree and the dependency audit (`pip-audit` for requirements files, `npm audit --audit-level=high` for package locks). Never push with a finding open.
+S2. Test fixtures must look obviously fake (`test-key-001`, `example-token`), never like a real key (random strings after `key`, `token`, `secret`, `password`). If a scanner still flags a fake value, allow-list that exact literal with a regex in `.gitleaks.toml`, never a whole path. A real secret is rotated and removed, never allowed.
+S3. After each push read the Security scan result. If it is red, fixing it comes before any other work; record it in your status file until green. A scan that keeps failing for the same reason is a rule problem: raise it in baloyinm/Re-usable-Component FIX-NOTICES.md.
 <!-- reuse-rule:end -->
