@@ -12,3 +12,8 @@ logs/
 *.sql.gz
 *.sqlite
 node_modules/
+
+# Real data and generated imports: never commit
+data/import/
+out/
+*.log

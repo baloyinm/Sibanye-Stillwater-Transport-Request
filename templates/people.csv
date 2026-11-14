@@ -1,0 +1,4 @@
+email,user_type,name,surname,z_number,mining_operation,specific_site,car_type,registration_number
+person.one@example.test,user,Example,Requester,Z900001,Example Operation,Example Site,,
+person.two@example.test,admin,Example,Controller,Z900002,Example Operation,Example Site,,
+person.three@example.test,driver,Example,Driver,Z900003,Example Operation,,Sedan,EXAMPLE 001 GP

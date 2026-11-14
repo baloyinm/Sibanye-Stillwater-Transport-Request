@@ -2,7 +2,13 @@
 
 Transport Hub: an application to manage transport and rotables department requests (trip requests, approval, drivers, vehicles) for EM Group on the Sibanye-Stillwater sites.
 
+## Try it (demo data only)
+`npm start`, open http://127.0.0.1:3000, tap a demo account. Everything shown is made up. `npm test` runs the checks. See `PLAN.md` (plan and questions) and `MIGRATION.md` (how real data goes in later).
+
 ## What is in this repo
+- `src/`, `public/`: the request, approve, dispatch and track app (Node 22, no packages to install), demo data only.
+- `lib/`: pinned copies of library components (`lib.json`). `templates/`, `scripts/import.mjs`: people import. `tests/`: checks.
+- `database/002_request_workflow.sql`: extra columns and tables for the workflow.
 - `database/schema.mariadb.sql`: the ride-sharing tables for MariaDB (users, profiles, drivers, rides).
 - `CLAUDE.md`: the shared reuse rule for the Baloyi re-usable component library.
 - `.gitignore`: keeps credentials, logs, uploads and database dumps out of the repo.
