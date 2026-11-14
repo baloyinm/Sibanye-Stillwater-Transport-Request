@@ -1,0 +1,31 @@
+{
+  "id": "./",
+  "name": "Transport Hub",
+  "short_name": "Transport",
+  "description": "Request, approve, dispatch and track trips.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "theme_color": "#0b5cad",
+  "background_color": "#f6f7f9",
+  "lang": "en-ZA",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

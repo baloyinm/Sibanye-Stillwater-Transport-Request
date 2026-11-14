@@ -32,3 +32,12 @@ CREATE TABLE IF NOT EXISTS auth_rate_limits (
     at_sec BIGINT NOT NULL,
     INDEX idx_rl (rl_key, at_sec)
 );
+
+-- Places a requester can pick (set per site by the controller or imported from templates/places.csv).
+CREATE TABLE IF NOT EXISTS places (
+    id VARCHAR(100) PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    latitude DOUBLE NOT NULL,
+    longitude DOUBLE NOT NULL,
+    active BOOLEAN DEFAULT TRUE
+);

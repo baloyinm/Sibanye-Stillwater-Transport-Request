@@ -7,7 +7,7 @@ export function loadConfig(env = process.env) {
     for (const k of ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD']) {
       if (!env[k]) throw new Error(`Live mode needs ${k} in the server environment. See MIGRATION.md.`);
     }
-    throw new Error('Live mode needs the MariaDB data store (src/live-store.mjs), which is not written yet. See MIGRATION.md, step 4.');
+    cfg.db = { host: env.DB_HOST, port: Number(env.DB_PORT || 3306), database: env.DB_NAME, user: env.DB_USER, password: env.DB_PASSWORD };
   }
   return cfg;
 }

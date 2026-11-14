@@ -4,6 +4,16 @@
   "private": true,
   "type": "module",
   "description": "Transport request, approve, dispatch and track. Demo data only until live data is imported.",
-  "engines": { "node": ">=22" },
-  "scripts": { "start": "node src/server.mjs", "test": "node --test tests/*.test.mjs", "import:check": "node scripts/import.mjs --check" }
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build-pwa.mjs",
+    "start": "node src/server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "import:check": "node scripts/import.mjs --check"
+  },
+  "dependencies": {
+    "mariadb": "^3.5.5"
+  }
 }

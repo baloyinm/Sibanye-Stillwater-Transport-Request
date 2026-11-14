@@ -50,6 +50,23 @@ export async function buildSql(people) {
   sql.push('COMMIT;'); return { sql: sql.join('\n') + '\n', temps: temps.join('\n') + '\n' };
 }
 
+export function checkPlaces(rows) {
+  const problems = []; const ids = new Set();
+  rows.forEach((r, i) => {
+    const n = `row ${i + 2}`;
+    if (!/^[a-z0-9-]{1,100}$/.test(r.id ?? '')) problems.push(`${n}: id must be lower-case letters, numbers and hyphens.`);
+    else if (ids.has(r.id)) problems.push(`${n}: this id is listed twice.`); else ids.add(r.id);
+    if (!r.name) problems.push(`${n}: name is required.`);
+    const la = Number(r.latitude), lo = Number(r.longitude);
+    if (r.latitude === '' || !(la >= -90 && la <= 90)) problems.push(`${n}: latitude must be a number from -90 to 90.`);
+    if (r.longitude === '' || !(lo >= -180 && lo <= 180)) problems.push(`${n}: longitude must be a number from -180 to 180.`);
+  });
+  return { problems, places: rows };
+}
+export function placesSql(places) {
+  return ['START TRANSACTION;', ...places.map((p) => `INSERT INTO places (id,name,latitude,longitude) VALUES (${q(p.id)},${q(p.name)},${Number(p.latitude)},${Number(p.longitude)});`), 'COMMIT;'].join('\n') + '\n';
+}
+
 if (import.meta.url === `file://${process.argv[1]}`) {
   const args = process.argv.slice(2); const check = args.includes('--check'); const rest = args.filter((a) => !a.startsWith('--'));
   const file = rest[0] ?? 'data/import/people.csv'; const out = rest[1] ?? 'data/import/out';
@@ -57,5 +74,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const { problems, people } = checkPeople(parseCsv(text));
   if (problems.length) { console.error(problems.join('\n')); console.error(`${problems.length} problem(s). Nothing written.`); process.exit(1); }
   console.log(`${people.length} row(s) checked: OK.`);
-  if (!check) { const { sql, temps } = await buildSql(people); mkdirSync(out, { recursive: true }); writeFileSync(`${out}/import-people.sql`, sql); writeFileSync(`${out}/temp-passwords.csv`, temps, { mode: 0o600 }); console.log(`Wrote ${out}/import-people.sql and ${out}/temp-passwords.csv (keep both out of git; give each person their temporary password privately).`); }
+  const pf = rest[0] ? null : 'data/import/places.csv'; let places = null;
+  if (pf) { try { const r = checkPlaces(parseCsv(readFileSync(pf, 'utf8'))); if (r.problems.length) { console.error(r.problems.join('\n')); process.exit(1); } places = r.places; console.log(`${places.length} place(s) checked: OK.`); } catch (e) { if (e.code !== 'ENOENT') throw e; console.log('No places.csv found: skipped.'); } }
+  if (!check) { if (places) { mkdirSync(out, { recursive: true }); writeFileSync(`${out}/import-places.sql`, placesSql(places)); } const { sql, temps } = await buildSql(people); mkdirSync(out, { recursive: true }); writeFileSync(`${out}/import-people.sql`, sql); writeFileSync(`${out}/temp-passwords.csv`, temps, { mode: 0o600 }); console.log(`Wrote ${out}/import-people.sql and ${out}/temp-passwords.csv (keep both out of git; give each person their temporary password privately).`); }
 }

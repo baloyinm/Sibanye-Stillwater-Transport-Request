@@ -41,7 +41,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
     async clearAttempts(k) { this._attempts = this._attempts.filter((a) => a.key !== k); },
     async purgeAttempts(before) { this._attempts = this._attempts.filter((a) => a.at >= before); },
     // --- data ---
-    nameOf,
+    async nameOf(id) { return nameOf(id); },
     demoAccounts() { return users.map((u) => ({ email: u.email, role: u.user_type, name: nameOf(u.id) })); },
     places: Object.entries(SITES).map(([k, [name, lat, lng]]) => ({ key: k, name, lat, lng })),
     async listRides(user) {
@@ -58,6 +58,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
       const ride = { id, user_id: user.id, driver_id: null, ...v, status: 'pending', distance_text: km == null ? null : `${km} km (straight line)`, duration_text: null, scheduled_status: null, rejection_reason: null, approved_by: null, approved_at: null, created_at: now(), accepted_at: null, completed_at: null, cancelled_at: null };
       rides.push(ride); event(id, user.id, 'requested'); return ride;
     },
+    async listPlaces() { return store.places; },
     async transition(ride, actor, action, to, extra = {}) {
       const r = rides.find((x) => x.id === ride.id); const stamp = now();
       r.status = to;
@@ -68,7 +69,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
       if (action === 'complete') r.completed_at = stamp;
       if (action === 'cancel') r.cancelled_at = stamp;
       event(r.id, actor.id, action, extra.reason ?? (extra.driver_id ? nameOf(extra.driver_id) : null));
-      return r;
+      return { ...r, requester: nameOf(r.user_id), driver_name: r.driver_id ? nameOf(r.driver_id) : null };
     },
     async listDrivers() { return drivers.map((d) => ({ ...d })); },
     async getDriver(id) { const d = dr(id); return d ? { ...d } : null; },

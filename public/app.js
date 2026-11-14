@@ -14,7 +14,7 @@ const chip = (r) => `<span class="chip ${r.status}">${esc(r.label)}</span>`;
 async function boot() {
   const m = await api('/api/mode'); mode = m.mode; $('#demo-banner').hidden = mode !== 'demo';
   const r = await api('/api/me');
-  if (!r.ok) return signIn(m); me = r.user; render();
+  if (!r.ok) return signIn(m); me = r.user; draw(...parseHash());
 }
 function signIn(m, error = '') {
   $('#who').innerHTML = '';
@@ -24,9 +24,15 @@ function signIn(m, error = '') {
   <p><button class="primary">Sign in</button></p></form></div>
   ${m.demoAccounts ? `<div class="card"><h2>Demo sign-in (demo only)</h2><p class="mut">Made-up accounts. One tap fills the form. Shared demo password.</p><ul class="plain">${m.demoAccounts.map((a) => `<li><button class="link" data-e="${esc(a.email)}">${esc(a.name)} (${esc({ user: 'requester', admin: 'controller', driver: 'driver' }[a.role])})</button></li>`).join('')}</ul></div>` : ''}`;
   document.querySelectorAll('[data-e]').forEach((b) => b.onclick = () => { $('#e').value = b.dataset.e; $('#p').value = m.demoPassword; $('#f').requestSubmit(); });
-  $('#f').onsubmit = async (ev) => { ev.preventDefault(); const r = await api('/api/login', 'POST', { email: $('#e').value, password: $('#p').value }); if (!r.ok) return signIn(m, r.error); me = r.user; render(); };
+  $('#f').onsubmit = async (ev) => { ev.preventDefault(); const r = await api('/api/login', 'POST', { email: $('#e').value, password: $('#p').value }); if (!r.ok) return signIn(m, r.error); me = r.user; draw(...parseHash()); };
 }
+function parseHash() { const m = location.hash.match(/^#\/(new|trip)(?:\/([\w-]+))?$/); return m ? [m[1], m[2]] : ['list']; }
+window.addEventListener('hashchange', () => { if (me) draw(...parseHash()); });
 function render(view = 'list', id) {
+  const h = view === 'new' ? '#/new' : view === 'trip' ? '#/trip/' + id : '#/';
+  if (location.hash === h || (h === '#/' && location.hash === '')) draw(view, id); else location.hash = h;
+}
+function draw(view = 'list', id) {
   clearInterval(timer);
   const role = { user: 'Requester', admin: 'Controller', driver: 'Driver' }[me.user_type];
   $('#who').innerHTML = `${esc(me.name)} (${role}) <button class="link" id="out">Sign out</button>`;

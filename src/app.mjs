@@ -23,7 +23,7 @@ export function createApp(store, cfg = {}) {
       const r = await guard.login(session, store, b.email, b.password, auth, deps, req.ip ?? '');
       if (r.error === 'throttled') return reply(429, { error: 'Too many tries. Wait 15 minutes and try again.' });
       if (r.error) return reply(401, { error: 'That email or password is not right.' });
-      return reply(200, { user: { ...r.user, name: store.nameOf(r.user.id) }, mode: store.mode });
+      return reply(200, { user: { ...r.user, name: await store.nameOf(r.user.id) }, mode: store.mode });
     }
     if (method === 'GET' && path === '/api/mode') return reply(200, { mode: store.mode, demoAccounts: store.mode === 'demo' ? store.demoAccounts() : undefined, demoPassword: store.mode === 'demo' ? store.demoPassword : undefined });
     if (method === 'POST' && path === '/api/logout') { await guard.logout(session, auth, deps); return reply(200, { ok: true }); }
@@ -31,10 +31,10 @@ export function createApp(store, cfg = {}) {
     const user = await guard.user(session, store, auth);
     if (!user) return reply(401, { error: 'Sign in to continue.' });
     const roleIs = (...r) => guard.roleStatus(user, r, auth) === 200;
-    const me = { id: user.id, email: user.email, user_type: user.user_type, name: store.nameOf(user.id) };
+    const me = { id: user.id, email: user.email, user_type: user.user_type, name: await store.nameOf(user.id) };
 
     if (method === 'GET' && path === '/api/me') return reply(200, { user: me, mode: store.mode });
-    if (method === 'GET' && path === '/api/places') return reply(200, { places: store.places ?? [] });
+    if (method === 'GET' && path === '/api/places') return reply(200, { places: store.listPlaces ? await store.listPlaces() : store.places });
 
     if (method === 'GET' && path === '/api/rides') {
       const rides = await store.listRides(user);
@@ -54,7 +54,7 @@ export function createApp(store, cfg = {}) {
       for (const d of await store.listDrivers()) {
         const busy = await store.driverBusy(d.id);
         const km = ride ? distanceKm(d.current_latitude, d.current_longitude, ride.pickup_latitude, ride.pickup_longitude) : null;
-        list.push({ id: d.id, name: store.nameOf(d.id), car_type: d.car_type, registration_number: d.registration_number, is_available: d.is_available && !busy, busy, km_to_pickup: km });
+        list.push({ id: d.id, name: await store.nameOf(d.id), car_type: d.car_type, registration_number: d.registration_number, is_available: d.is_available && !busy, busy, km_to_pickup: km });
       }
       list.sort((a, c) => (c.is_available - a.is_available) || ((a.km_to_pickup ?? 1e9) - (c.km_to_pickup ?? 1e9)));
       return reply(200, { drivers: list });
@@ -96,8 +96,8 @@ export function createApp(store, cfg = {}) {
         if (!d.is_available || await store.driverBusy(d.id)) return reply(409, { error: 'That driver is not free. Choose another.' });
         extra.driver_id = d.id;
       }
-      const updated = await store.transition(ride, user, action, a.to, extra);
-      return reply(200, { ride: view(store, user, { ...updated, requester: store.nameOf(updated.user_id), driver_name: updated.driver_id ? store.nameOf(updated.driver_id) : null }) });
+      let updated; try { updated = await store.transition(ride, user, action, a.to, extra); } catch (e) { if (e.code === 'CONFLICT') return reply(409, { error: e.message + ' Refresh and try again.' }); throw e; }
+      return reply(200, { ride: view(store, user, updated) });
     }
     return reply(404, { error: 'Not found.' });
   };
