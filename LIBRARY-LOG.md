@@ -1,5 +1,7 @@
 # Library log
 
+| 2026-11-15 | n/a | email/document-style-kit, email/message-channels-kit, integrations/email-sms-messaging | 1.4.0 / 1.1.1 / 1.6.0 | not used: no documents or messages are generated (docs/DOCUMENT-INVENTORY.md) | |
+
 ## Events
 | Date | Component | Action | Version | This project's commit | Library commit |
 |---|---|---|---|---|---|
