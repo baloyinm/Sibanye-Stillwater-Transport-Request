@@ -31,3 +31,19 @@ Status key: BUILT = in repo and proven by a test; NEW = built in this delivery; 
 
 ## Delivery result (26 Nov 2026)
 P7, P8, P9, P10, P11 built and proven: `npm test` 17 pass, 0 fail, 1 skipped (live MariaDB test needs a database). Browser walk of Reports and Places at 390 and 1280 px passed. New screens have not been through the three UX gate checks (NOT RUN). Live store SQL for places and retention is NOT VERIFIED (no MariaDB here). Retention is never run automatically: `RETENTION_DAYS=730 node scripts/retention.mjs` is a dry run, `--apply` changes data; the period is Ntsakisi's decision (PLAN.md Q10).
+
+## Round 2 (26 Nov 2026): the ten questions, each behind a setting
+All settings are in `src/settings.mjs` and `.env.example`; defaults are the simple choice, so his answer is one line. Each is proven by `tests/settings.test.mjs` (demo store) and, for the data paths, by `tests/live-store.test.mjs` on a real MariaDB 10.11 (run locally with a socket: PASS), plus the browser walk `tests/e2e/ui-walk.py` (390 and 1280 px, light and dark, every setting on: PASS).
+| Q | Setting | Built |
+|---|---|---|
+| 1 approval chain | APPROVAL_CHAIN=single|two (new role `supervisor`) | yes |
+| 2 places | PLACES_MODE=list|free | yes (free mode stores no map position, so no distance) |
+| 3 vehicle types, cost centre | VEHICLE_TYPES, COST_CENTRE=off|optional|required | yes |
+| 4 driver accepts | DRIVER_ACCEPT=auto|accept (status `offered`, actions accept and decline) | yes |
+| 5 messages | NOTIFY=off|inapp | in-app only; SMS and email are NOT built and nothing is sent (needs his yes and the messaging kit) |
+| 6 road distance and time | ROUTING=road + ROUTING_URL (OSRM-compatible) | yes, proven against a local fake service; falls back to straight line; NOT VERIFIED against a real routing service |
+| 7 positions | TRACKING=phone|tracker + TRACKER_TOKEN | yes (tracker posts to /api/tracker/position) |
+| 8 PHP or Node | docs/DEPLOYMENT.md | documented; PHP port NOT BUILT |
+| 9 parts requests | ROTABLES=off|on (kind parts, item list) | yes |
+| 10 retention | RETENTION_DAYS (default 730) | yes; legal review of the period still needed |
+Database: `database/003_settings.sql` (needed for supervisor, new statuses, cost centre, parts, notices).

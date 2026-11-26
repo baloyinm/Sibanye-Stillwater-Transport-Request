@@ -1,6 +1,7 @@
 // DEMO data store: in memory, fake people and places, lost on restart. Everything here is made up.
 import { hashPassword } from '../lib/auth_guard.mjs';
 import { distanceKm } from '../lib/geo_distance.mjs';
+import { BUSY } from './workflow.mjs';
 
 export const DEMO_PASSWORD = 'demo-password-001';   // made up; works only in demo mode
 const SITES = { // fake pickup points near a made-up mine area; coordinates are rough and not real addresses
@@ -9,7 +10,7 @@ const SITES = { // fake pickup points near a made-up mine area; coordinates are 
 
 export async function createDemoStore(now = () => new Date().toISOString()) {
   const hash = await hashPassword(DEMO_PASSWORD);
-  const users = []; const profiles = []; const drivers = []; const rides = []; const events = [];
+  const users = []; const profiles = []; const drivers = []; const rides = []; const events = []; const notices = [];
   let seq = 100;
   const nid = (p) => `${p}-${++seq}`;
   const addUser = (id, email, type, name, surname, extra = {}) => {
@@ -20,6 +21,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
   addUser('u-1', 'requester1@example.test', 'user', 'Demo', 'Requester One', { z: 'Z000001' });
   addUser('u-2', 'requester2@example.test', 'user', 'Demo', 'Requester Two', { z: 'Z000002' });
   addUser('a-1', 'admin@example.test', 'admin', 'Demo', 'Controller', { z: 'Z000010' });
+  addUser('s-1', 'supervisor@example.test', 'supervisor', 'Demo', 'Supervisor', { z: 'Z000011' });
   addUser('d-1', 'driver1@example.test', 'driver', 'Demo', 'Driver One', { z: 'Z000021', car: 'Sedan', reg: 'DEMO 001 GP', lat: -26.5150, lng: 27.6050 });
   addUser('d-2', 'driver2@example.test', 'driver', 'Demo', 'Driver Two', { z: 'Z000022', car: 'Minibus', reg: 'DEMO 002 GP', lat: -26.5300, lng: 27.5900 });
 
@@ -55,7 +57,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
     async createRide(user, v) {
       const id = nid('r');
       const km = v.destination_latitude != null && v.destination_longitude != null ? distanceKm(v.pickup_latitude, v.pickup_longitude, v.destination_latitude, v.destination_longitude) : null;
-      const ride = { id, user_id: user.id, driver_id: null, ...v, status: 'pending', distance_text: km == null ? null : `${km} km (straight line)`, duration_text: null, scheduled_status: null, rejection_reason: null, approved_by: null, approved_at: null, created_at: now(), accepted_at: null, completed_at: null, cancelled_at: null };
+      const ride = { id, user_id: user.id, driver_id: null, kind: 'people', items: null, cost_centre: null, ...v, status: 'pending', distance_text: v.distance_text ?? (km == null ? null : `${km} km (straight line)`), duration_text: v.duration_text ?? null, scheduled_status: null, rejection_reason: null, approved_by: null, approved_at: null, created_at: now(), accepted_at: null, completed_at: null, cancelled_at: null };
       rides.push(ride); event(id, user.id, 'requested'); return ride;
     },
     async listPlaces(all = false) { return all ? store.places.map((p) => ({ ...p })) : store.places.filter((p) => p.active !== false); },
@@ -66,7 +68,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
       Object.assign(p, { name: v.name, lat: v.lat, lng: v.lng, active: v.active !== false }); return { ...p };
     },
     async anonymiseRides(ids) {
-      let n = 0; for (const r of rides) if (ids.includes(r.id)) { Object.assign(r, { pickup_address: '[removed]', destination_address: '[removed]', purpose: null, rejection_reason: null, destination_latitude: null, destination_longitude: null, pickup_latitude: 0, pickup_longitude: 0 }); n++; }
+      let n = 0; for (const r of rides) if (ids.includes(r.id)) { Object.assign(r, { pickup_address: '[removed]', destination_address: '[removed]', purpose: null, rejection_reason: null, destination_latitude: null, destination_longitude: null, pickup_latitude: null, pickup_longitude: null, items: null, cost_centre: null }); n++; }
       for (const e of events) if (ids.includes(e.ride_id)) e.note = null; return n;
     },
     async transition(ride, actor, action, to, extra = {}) {
@@ -75,17 +77,21 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
       if (action === 'approve') { r.approved_by = actor.id; r.approved_at = stamp; }
       if (action === 'reject') r.rejection_reason = extra.reason;
       if (action === 'assign') { r.driver_id = extra.driver_id; r.accepted_at = stamp; }
-      if (action === 'unassign') r.driver_id = null;
+      if (action === 'unassign' || action === 'decline') r.driver_id = null;
       if (action === 'complete') r.completed_at = stamp;
       if (action === 'cancel') r.cancelled_at = stamp;
       event(r.id, actor.id, action, extra.reason ?? (extra.driver_id ? nameOf(extra.driver_id) : null));
       return { ...r, requester: nameOf(r.user_id), driver_name: r.driver_id ? nameOf(r.driver_id) : null };
     },
+    async addNotice(user_id, ride_id, text) { notices.push({ id: nid('n'), user_id, ride_id, text, created_at: now(), read_at: null }); },
+    async listNotices(user_id) { return notices.filter((n) => n.user_id === user_id).slice(-20).reverse(); },
+    async markNoticesRead(user_id) { for (const n of notices) if (n.user_id === user_id && !n.read_at) n.read_at = now(); },
+    async findDriverByReg(reg) { const d = drivers.find((x) => x.registration_number === reg); return d ? { ...d } : null; },
     async listDrivers() { return drivers.map((d) => ({ ...d })); },
     async getDriver(id) { const d = dr(id); return d ? { ...d } : null; },
     async setDriverLocation(id, lat, lng) { const d = dr(id); d.current_latitude = lat; d.current_longitude = lng; d.location_at = now(); },
     async setDriverAvailable(id, on) { dr(id).is_available = !!on; },
-    async driverBusy(id) { return rides.some((r) => r.driver_id === id && ['assigned', 'in_progress'].includes(r.status)); },
+    async driverBusy(id) { return rides.some((r) => r.driver_id === id && BUSY.includes(r.status)); },
     async seedSampleRides() {
       const a = await store.createRide(users[0], { pickup_address: SITES.gate[0], pickup_latitude: SITES.gate[1], pickup_longitude: SITES.gate[2], destination_address: SITES.shaft[0], destination_latitude: SITES.shaft[1], destination_longitude: SITES.shaft[2], purpose: 'Demo: team to shaft', vehicle_type: 'Minibus', passenger_count: 6, scheduled_at: null });
       const b = await store.createRide(users[1], { pickup_address: SITES.depot[0], pickup_latitude: SITES.depot[1], pickup_longitude: SITES.depot[2], destination_address: SITES.hostel[0], destination_latitude: SITES.hostel[1], destination_longitude: SITES.hostel[2], purpose: 'Demo: parts to hostel store', vehicle_type: 'Bakkie', passenger_count: 1, scheduled_at: null });

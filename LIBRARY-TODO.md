@@ -1,6 +1,9 @@
 # Library candidates (not published; no lock taken)
-- 2026-11-26 · CSV export with formula-injection guard (`src/reports.mjs` csvCell/toCsv) · ADD data/csv-safe-export-helper · any app with a controller download
+- 2026-11-26 · CSV export with formula-injection guard (`src/reports.mjs` csvCell/toCsv) · ADD data/csv-safe-export-helper · any app with a controller download · done 2026-11-26 388a69c
 - 2026-11-26 · Retention / anonymise finished records by age, dry run first (`src/retention.mjs`, `scripts/retention.mjs`) · ADD business/popia-retention-anonymiser · POPIA need in every app with personal data
 - 2026-11-26 · Workflow transition table + role test pattern (`src/workflow.mjs`, `tests/workflow.test.mjs`) · MODIFY data/dispatch-request-schema (add JS rules) · currently only a design reference
-- 2026-11-26 · Node CI workflow (build, test, audit, gitleaks) · ADD automations/node-ci-workflow-template · every Node project needs it
+- 2026-11-26 · Node CI workflow (build, test, audit, gitleaks) · ADD automations/node-ci-workflow-template · every Node project needs it · done 2026-11-26 70d8d85
 - 2026-11-26 · Controller reports + places admin screens (plain JS) · MODIFY ui/white-label-ui-kit (list/form patterns) · avoid parallel kits
+- 2026-11-26 · Settings-driven workflow table (approval chain, driver accept) · MODIFY data/dispatch-request-schema · one rule table built from settings
+- 2026-11-26 · OSRM road route client with fallback (`lib/routing.mjs`) · ADD integrations/osrm-road-route-client · any app wanting road km and minutes
+- 2026-11-26 · Playwright role walk of a full workflow with all settings (`tests/e2e/ui-walk.py`) · ADD ui/role-walk-template · proof pattern for rule W5

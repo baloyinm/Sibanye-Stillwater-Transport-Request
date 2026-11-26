@@ -4,7 +4,7 @@
    always one consistent version. Other websites, non-GET requests and the worker itself are never touched. */
 'use strict';
 const PREFIX = "transport-hub";
-const CACHE = "transport-hub-eabe0c6240";
+const CACHE = "transport-hub-d694a361df";
 const PRECACHE = ["app.css","app.js","icon-180.png","icon-192.png","icon-512.png","icon-maskable-512.png","index.html","manifest.webmanifest","pwa-config.js","pwa.js"];
 const SHELL = "index.html";
 const NAV_TIMEOUT = 4000;

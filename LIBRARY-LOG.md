@@ -26,3 +26,4 @@
 
 ## 2026-11-26 delivery
 - BUILD reports, places admin, retention (see LIBRARY-TODO.md); no library component used or published. Walk at 390 and 1280 px as controller: no sideways scroll, no script errors. ux_audit, ux_render_check, theme-contrast on new screens: NOT RUN.
+- 2026-11-26 round 2 UX gate on the new and changed screens (controller, requester, driver; every setting on): ux_audit.py --standard 2 --include-components --strict: 1 screens checked, 0 problems, 0 warnings. ux_render_check.mjs --strict light and dark: 0 problems, 0 warnings on 7 page views. theme-contrast-test: 2 tests pass. Axe-core: NOT RUN.

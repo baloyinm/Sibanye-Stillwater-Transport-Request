@@ -2,18 +2,34 @@
 import * as guard from '../lib/auth_guard.mjs';
 import { distanceKm } from '../lib/geo_distance.mjs';
 import { inRange, summarise, toCsv } from './reports.mjs';
-import { ACTIONS, LABELS, allowedActions, validateNewRide } from './workflow.mjs';
+import { LABELS, allowedActions, validateNewRide, buildActions } from './workflow.mjs';
+import { loadSettings, publicSettings } from './settings.mjs';
+import { roadRoute } from '../lib/routing.mjs';
+import { timingSafeEqual } from 'node:crypto';
 
 const AUTH = { login_col: 'email', password_col: 'password_hash', role_col: 'user_type', status_col: '', public_fields: ['id', 'email', 'user_type'] };
 const json = (status, body, extra = {}) => ({ status, body, ...extra });
-const view = (store, user, ride) => ({ ...ride, label: LABELS[ride.status], actions: allowedActions(user, ride) });
 
-export function createApp(store, cfg = {}) {
+export function createApp(store, cfg = {}, fetchFn = fetch) {
+  const settings = cfg.settings ?? loadSettings({});
+  const ACTIONS = buildActions(settings);
+  const view = (store, user, ride) => ({ ...ride, label: LABELS[ride.status], actions: allowedActions(user, ride, ACTIONS) });
+  const notify = async (userId, rideId, text) => { if (settings.notify === 'inapp' && userId) await store.addNotice(userId, rideId, text); };
+  const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && timingSafeEqual(x, y); };
   const sessions = guard.memorySessionStore();
   const auth = { ...AUTH, allowed_origins: cfg.allowedOrigins ?? [] };
   const deps = { store: sessions };
 
   return async function handle(req) { // req: { method, path, query, headers, body, https, ip }
+    if (req.method === 'POST' && req.path === '/api/tracker/position') { // vehicle trackers: no session, a shared token instead (Q7)
+      if (settings.tracking !== 'tracker') return { status: 404, body: { error: 'Not found.' } };
+      const tok = (req.headers ?? {})['x-tracker-token'];
+      if (!tok || !safeEq(tok, settings.trackerToken)) return { status: 401, body: { error: 'Tracker token not accepted.' } };
+      const t = req.body ?? {}; const d = await store.findDriverByReg(String(t.registration_number ?? ''));
+      if (!d) return { status: 404, body: { error: 'No vehicle with that registration.' } };
+      if (distanceKm(Number(t.latitude), Number(t.longitude), 0, 0) === null) return { status: 422, body: { error: 'That map position is not valid.' } };
+      await store.setDriverLocation(d.id, Number(t.latitude), Number(t.longitude)); return { status: 200, body: { ok: true } };
+    }
     const session = await guard.startSession(req, auth, deps);
     const cookie = () => session.setCookie;
     const reply = (status, body) => ({ status, body, setCookie: cookie() });
@@ -24,9 +40,9 @@ export function createApp(store, cfg = {}) {
       const r = await guard.login(session, store, b.email, b.password, auth, deps, req.ip ?? '');
       if (r.error === 'throttled') return reply(429, { error: 'Too many tries. Wait 15 minutes and try again.' });
       if (r.error) return reply(401, { error: 'That email or password is not right.' });
-      return reply(200, { user: { ...r.user, name: await store.nameOf(r.user.id) }, mode: store.mode });
+      return reply(200, { user: { ...r.user, name: await store.nameOf(r.user.id) }, mode: store.mode, settings: publicSettings(settings) });
     }
-    if (method === 'GET' && path === '/api/mode') return reply(200, { mode: store.mode, demoAccounts: store.mode === 'demo' ? store.demoAccounts() : undefined, demoPassword: store.mode === 'demo' ? store.demoPassword : undefined });
+    if (method === 'GET' && path === '/api/mode') return reply(200, { mode: store.mode, settings: publicSettings(settings), demoAccounts: store.mode === 'demo' ? store.demoAccounts() : undefined, demoPassword: store.mode === 'demo' ? store.demoPassword : undefined });
     if (method === 'POST' && path === '/api/logout') { await guard.logout(session, auth, deps); return reply(200, { ok: true }); }
 
     const user = await guard.user(session, store, auth);
@@ -34,6 +50,8 @@ export function createApp(store, cfg = {}) {
     const roleIs = (...r) => guard.roleStatus(user, r, auth) === 200;
     const me = { id: user.id, email: user.email, user_type: user.user_type, name: await store.nameOf(user.id) };
 
+    if (method === 'GET' && path === '/api/notices') return reply(200, { notices: settings.notify === 'inapp' ? await store.listNotices(user.id) : [] });
+    if (method === 'POST' && path === '/api/notices/read') { await store.markNoticesRead(user.id); return reply(200, { ok: true }); }
     if (method === 'GET' && path === '/api/me') return reply(200, { user: me, mode: store.mode });
     if (method === 'GET' && path === '/api/places') return reply(200, { places: await store.listPlaces(roleIs('admin') && req.query?.all === '1') });
     if (method === 'POST' && (path === '/api/places' || /^\/api\/places\/[\w-]+$/.test(path))) {
@@ -59,9 +77,14 @@ export function createApp(store, cfg = {}) {
     }
     if (method === 'POST' && path === '/api/rides') {
       if (!roleIs('user')) return reply(403, { error: 'Only a requester can ask for a trip.' });
-      const v = validateNewRide(b);
+      const v = validateNewRide(b, Date.now(), settings);
       if (v.errors) return reply(422, { errors: v.errors });
+      if (settings.routing === 'road' && v.value.pickup_latitude != null && v.value.destination_latitude != null) {
+        const rr = await roadRoute(settings.routingUrl, { lat: v.value.pickup_latitude, lng: v.value.pickup_longitude }, { lat: v.value.destination_latitude, lng: v.value.destination_longitude }, fetchFn);
+        if (rr) { v.value.distance_text = `${rr.km} km (by road)`; v.value.duration_text = `${rr.minutes} min`; }
+      }
       const ride = await store.createRide(user, v.value);
+      await notify(user.id, ride.id, 'Your trip request was sent. You will be told when it is decided.');
       return reply(201, { ride: view(store, user, ride) });
     }
     if (method === 'GET' && path === '/api/drivers') {
@@ -104,7 +127,7 @@ export function createApp(store, cfg = {}) {
       const ride = await store.getRide(m[1]); const action = m[2]; const a = ACTIONS[action];
       if (!ride || !canSee(user, ride)) return reply(404, { error: 'That trip was not found.' });
       if (!a.from.includes(ride.status)) return reply(409, { error: `This trip is "${LABELS[ride.status]}", so that step is not available.` });
-      if (!allowedActions(user, ride).includes(action)) return reply(403, { error: 'You do not have permission for that step on this trip.' });
+      if (!allowedActions(user, ride, ACTIONS).includes(action)) return reply(403, { error: 'You do not have permission for that step on this trip.' });
       const extra = {};
       if (a.needs === 'reason') { extra.reason = String(b.reason ?? '').trim(); if (!extra.reason) return reply(422, { errors: { reason: 'Say why it is rejected so the requester knows.' } }); if (extra.reason.length > 300) return reply(422, { errors: { reason: 'Keep the reason under 300 characters.' } }); }
       if (a.needs === 'driver_id') {
@@ -114,11 +137,15 @@ export function createApp(store, cfg = {}) {
         extra.driver_id = d.id;
       }
       let updated; try { updated = await store.transition(ride, user, action, a.to, extra); } catch (e) { if (e.code === 'CONFLICT') return reply(409, { error: e.message + ' Refresh and try again.' }); throw e; }
+      const NOTE = { endorse: 'was endorsed by the supervisor and waits for the controller', approve: 'was approved', reject: `was rejected: ${extra.reason ?? ''}`, assign: settings.driverAccept === 'accept' ? 'was offered to a driver' : 'has a driver', accept: 'was accepted by the driver', decline: 'was declined by the driver, so it needs another driver', unassign: 'lost its driver and needs another', start: 'is on the way', complete: 'is complete', cancel: 'was cancelled' };
+      const what = `Your trip from ${ride.pickup_address} to ${ride.destination_address}`;
+      if (NOTE[action] && ride.user_id !== user.id) await notify(ride.user_id, ride.id, `${what} ${NOTE[action]}.`);
+      if (['assign', 'unassign', 'cancel'].includes(action) && (extra.driver_id || ride.driver_id) && (extra.driver_id ?? ride.driver_id) !== user.id) await notify(extra.driver_id ?? ride.driver_id, ride.id, `Trip ${ride.pickup_address} to ${ride.destination_address}: ${action === 'assign' ? (settings.driverAccept === 'accept' ? 'please accept or decline it' : 'you are assigned') : 'you are no longer assigned'}.`);
       return reply(200, { ride: view(store, user, updated) });
     }
     return reply(404, { error: 'Not found.' });
   };
 }
 function canSee(user, ride) {
-  return user.user_type === 'admin' || (user.user_type === 'user' && ride.user_id === user.id) || (user.user_type === 'driver' && ride.driver_id === user.id);
+  return ['admin', 'supervisor'].includes(user.user_type) || (user.user_type === 'user' && ride.user_id === user.id) || (user.user_type === 'driver' && ride.driver_id === user.id);
 }
