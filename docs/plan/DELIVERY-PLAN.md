@@ -28,3 +28,6 @@ Status key: BUILT = in repo and proven by a test; NEW = built in this delivery; 
 | Reports CSV | none found in repo notes (library not read this session) | BUILD small | candidate: data/csv-export-helper, see LIBRARY-TODO.md |
 | Places CRUD | data/field-whitelist-update-helper | USE as design (explicit field list) | plain JS |
 | Retention | none | BUILD, candidate component | LIBRARY-TODO.md |
+
+## Delivery result (26 Nov 2026)
+P7, P8, P9, P10, P11 built and proven: `npm test` 17 pass, 0 fail, 1 skipped (live MariaDB test needs a database). Browser walk of Reports and Places at 390 and 1280 px passed. New screens have not been through the three UX gate checks (NOT RUN). Live store SQL for places and retention is NOT VERIFIED (no MariaDB here). Retention is never run automatically: `RETENTION_DAYS=730 node scripts/retention.mjs` is a dry run, `--apply` changes data; the period is Ntsakisi's decision (PLAN.md Q10).

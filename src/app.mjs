@@ -1,6 +1,7 @@
 // Request handling: pure functions of (store, request). server.mjs only wires them to HTTP.
 import * as guard from '../lib/auth_guard.mjs';
 import { distanceKm } from '../lib/geo_distance.mjs';
+import { inRange, summarise, toCsv } from './reports.mjs';
 import { ACTIONS, LABELS, allowedActions, validateNewRide } from './workflow.mjs';
 
 const AUTH = { login_col: 'email', password_col: 'password_hash', role_col: 'user_type', status_col: '', public_fields: ['id', 'email', 'user_type'] };
@@ -34,7 +35,23 @@ export function createApp(store, cfg = {}) {
     const me = { id: user.id, email: user.email, user_type: user.user_type, name: await store.nameOf(user.id) };
 
     if (method === 'GET' && path === '/api/me') return reply(200, { user: me, mode: store.mode });
-    if (method === 'GET' && path === '/api/places') return reply(200, { places: store.listPlaces ? await store.listPlaces() : store.places });
+    if (method === 'GET' && path === '/api/places') return reply(200, { places: await store.listPlaces(roleIs('admin') && req.query?.all === '1') });
+    if (method === 'POST' && (path === '/api/places' || /^\/api\/places\/[\w-]+$/.test(path))) {
+      if (!roleIs('admin')) return reply(403, { error: 'Only the controller can change places.' });
+      const errors = {}; const name = String(b.name ?? '').trim(); const lat = Number(b.lat), lng = Number(b.lng);
+      if (!name) errors.name = 'Enter the place name.'; else if (name.length > 120) errors.name = 'Keep the name under 120 characters.';
+      if (b.lat === '' || b.lat == null || !Number.isFinite(lat) || lat < -90 || lat > 90) errors.lat = 'Enter a latitude between -90 and 90.';
+      if (b.lng === '' || b.lng == null || !Number.isFinite(lng) || lng < -180 || lng > 180) errors.lng = 'Enter a longitude between -180 and 180.';
+      if (Object.keys(errors).length) return reply(422, { errors });
+      const saved = await store.savePlace(path === '/api/places' ? null : path.split('/')[3], { name, lat, lng, active: b.active !== false });
+      return saved ? reply(path === '/api/places' ? 201 : 200, { place: saved }) : reply(404, { error: 'That place was not found.' });
+    }
+    if (method === 'GET' && (path === '/api/reports/summary' || path === '/api/reports/trips.csv')) {
+      if (!roleIs('admin')) return reply(403, { error: 'Only the controller can see reports.' });
+      for (const k of ['from', 'to']) if (req.query?.[k] && Number.isNaN(Date.parse(req.query[k]))) return reply(422, { errors: { [k]: 'Enter a valid date.' } });
+      const rides = inRange(await store.listRides(user), req.query?.from, req.query?.to);
+      return path.endsWith('.csv') ? { status: 200, csv: toCsv(rides), setCookie: cookie() } : reply(200, { summary: summarise(rides) });
+    }
 
     if (method === 'GET' && path === '/api/rides') {
       const rides = await store.listRides(user);

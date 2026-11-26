@@ -19,6 +19,7 @@ export function buildServer(app) {
         for await (const c of rq) { size += c.length; if (size > 100000) { rs.writeHead(413, SEC).end(); return; } raw += c; }
         let body = {}; if (raw) { try { body = JSON.parse(raw); } catch { rs.writeHead(400, { ...SEC, 'Content-Type': 'application/json' }).end('{"error":"Bad request body."}'); return; } }
         const out = await app({ method: rq.method, path: url.pathname, query: Object.fromEntries(url.searchParams), headers: rq.headers, body, https: rq.headers['x-forwarded-proto'] === 'https', ip: rq.socket.remoteAddress });
+        if (out.csv != null) { rs.writeHead(200, { ...SEC, 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="trips.csv"', 'Cache-Control': 'no-store', ...(out.setCookie ? { 'Set-Cookie': out.setCookie } : {}) }); rs.end(out.csv); return; }
         rs.writeHead(out.status, { ...SEC, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...(out.setCookie ? { 'Set-Cookie': out.setCookie } : {}) });
         rs.end(JSON.stringify(out.body)); return;
       }

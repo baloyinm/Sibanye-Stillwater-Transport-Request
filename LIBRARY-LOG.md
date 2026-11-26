@@ -23,3 +23,6 @@
 - Demo sign-in: ui/demo-quick-login-panel not used (not a Next.js app); plain buttons built, shown only in demo mode.
 - Jarvis hub (H1 to H4): BLOCKED: not done in this session (no access to baloyinm/jarvis requested; other repos untouched). Status line and learning note still owed.
 - UX gate (2026-11-14): ux_audit.py on public/: 0 problems. ux_render_check.mjs --strict, light and dark, at 320/390/1280px, signed in as controller, requester and driver (list, new trip, trip pages): 0 problems, 0 warnings. theme-contrast-test: 2 tests pass (light, dark). Axe-core not installed: not run. Audit sees one HTML file (screens are drawn by JS), so the rendered check is the real gate.
+
+## 2026-11-26 delivery
+- BUILD reports, places admin, retention (see LIBRARY-TODO.md); no library component used or published. Walk at 390 and 1280 px as controller: no sideways scroll, no script errors. ux_audit, ux_render_check, theme-contrast on new screens: NOT RUN.

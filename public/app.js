@@ -26,10 +26,10 @@ function signIn(m, error = '') {
   document.querySelectorAll('[data-e]').forEach((b) => b.onclick = () => { $('#e').value = b.dataset.e; $('#p').value = m.demoPassword; $('#f').requestSubmit(); });
   $('#f').onsubmit = async (ev) => { ev.preventDefault(); const r = await api('/api/login', 'POST', { email: $('#e').value, password: $('#p').value }); if (!r.ok) return signIn(m, r.error); me = r.user; draw(...parseHash()); };
 }
-function parseHash() { const m = location.hash.match(/^#\/(new|trip)(?:\/([\w-]+))?$/); return m ? [m[1], m[2]] : ['list']; }
+function parseHash() { const m = location.hash.match(/^#\/(new|trip|reports|places)(?:\/([\w-]+))?$/); return m ? [m[1], m[2]] : ['list']; }
 window.addEventListener('hashchange', () => { if (me) draw(...parseHash()); });
 function render(view = 'list', id) {
-  const h = view === 'new' ? '#/new' : view === 'trip' ? '#/trip/' + id : '#/';
+  const h = ['new', 'reports', 'places'].includes(view) ? '#/' + view : view === 'trip' ? '#/trip/' + id : '#/';
   if (location.hash === h || (h === '#/' && location.hash === '')) draw(view, id); else location.hash = h;
 }
 function draw(view = 'list', id) {
@@ -37,17 +37,19 @@ function draw(view = 'list', id) {
   const role = { user: 'Requester', admin: 'Controller', driver: 'Driver' }[me.user_type];
   $('#who').innerHTML = `${esc(me.name)} (${role}) <button class="link" id="out">Sign out</button>`;
   $('#out').onclick = async () => { await api('/api/logout', 'POST'); boot(); };
-  if (view === 'new') return newTrip(); if (view === 'trip') return tripPage(id); return list();
+  if (view === 'reports' && me.user_type === 'admin') return reportsPage(); if (view === 'places' && me.user_type === 'admin') return placesPage(); if (view === 'new') return newTrip(); if (view === 'trip') return tripPage(id); return list();
 }
 async function list() {
   const r = await api('/api/rides'); const rides = r.rides ?? [];
   const title = { user: 'My trips', admin: 'All trips', driver: 'My assigned trips' }[me.user_type];
   $('#app').innerHTML = `<h2>${title}</h2>${me.user_type === 'user' ? '<p><button class="primary" id="new">Request a trip</button></p>' : ''}
+  ${me.user_type === 'admin' ? '<p class="row"><button id="rep">Reports</button><button id="plc">Places</button></p>' : ''}
   ${me.user_type === 'driver' ? driverPanel() : ''}
   ${rides.length ? rides.map((x) => `<div class="card"><div class="row" style="justify-content:space-between"><strong>${esc(x.pickup_address)} to ${esc(x.destination_address)}</strong>${chip(x)}</div>
     <div class="mut">${esc(x.requester)} · ${esc(x.vehicle_type)} · ${x.passenger_count} passenger(s)${x.scheduled_at ? ' · ' + when(x.scheduled_at) : ''}</div>
     <p><button data-id="${esc(x.id)}">Open trip</button></p></div>`).join('') : `<div class="card"><p>No trips yet.</p><p class="mut">${me.user_type === 'user' ? 'Choose "Request a trip" to ask for one.' : me.user_type === 'admin' ? 'New requests will appear here.' : 'Trips assigned to you will appear here.'}</p></div>`}`;
   $('#new')?.addEventListener('click', () => render('new'));
+  $('#rep')?.addEventListener('click', () => render('reports')); $('#plc')?.addEventListener('click', () => render('places'));
   document.querySelectorAll('[data-id]').forEach((b) => b.onclick = () => render('trip', b.dataset.id));
   bindDriver(); if (me.user_type !== 'user' || rides.length) timer = setInterval(() => document.hidden || list(), 15000);
 }
@@ -104,5 +106,34 @@ async function tripPage(id, msg = '', errors = {}) {
     tripPage(id, res.ok ? 'Done.' : '', res.ok ? {} : { ...(res.errors ?? {}), error: res.error });
   });
   if (['assigned', 'in_progress'].includes(x.status)) timer = setInterval(() => document.hidden || tripPage(id, msg), 10000);
+}
+async function reportsPage(from = '', to = '') {
+  const qs = new URLSearchParams(); if (from) qs.set('from', from); if (to) qs.set('to', to);
+  const r = await api('/api/reports/summary?' + qs); const s = r.summary;
+  const rows = (o) => Object.entries(o).filter(([, n]) => n).map(([k, n]) => `<tr><th scope="row">${esc(LABELS_S[k] ?? k)}</th><td>${n}</td></tr>`).join('') || '<tr><td colspan="2">None in this period.</td></tr>';
+  $('#app').innerHTML = `<p><button id="b">Back to trips</button></p><h2>Reports</h2>
+  ${r.ok ? '' : `<p class="err" role="alert">${esc(r.error ?? 'Check the dates.')}</p>`}
+  <form id="rf" class="card"><label for="rfrom">From</label><input id="rfrom" type="date" value="${esc(from)}"><label for="rto">To</label><input id="rto" type="date" value="${esc(to)}">
+  <p class="row"><button class="primary">Show report</button><a class="btn" id="csv" href="/api/reports/trips.csv?${qs}" download>Download trips (CSV)</a></p></form>
+  ${s ? `<div class="card"><h2>${s.total} trip(s)</h2><table><caption class="mut">By status</caption><tbody>${rows(s.by_status)}</tbody></table>
+  <table><caption class="mut">By vehicle type</caption><tbody>${rows(s.by_vehicle)}</tbody></table>
+  <p>Completed: ${s.completed_passengers} passenger(s), ${s.completed_km_straight_line} km (straight line).</p>
+  <p>Average time to approve: ${s.avg_minutes_to_approve == null ? 'no approved trips yet' : s.avg_minutes_to_approve + ' minute(s)'}.</p></div>` : ''}`;
+  $('#b').onclick = () => render();
+  $('#rf').onsubmit = (ev) => { ev.preventDefault(); reportsPage($('#rfrom').value ? $('#rfrom').value + 'T00:00:00+02:00' : '', $('#rto').value ? $('#rto').value + 'T23:59:59+02:00' : ''); };
+}
+const LABELS_S = { pending: 'Waiting for approval', approved: 'Approved, needs a driver', rejected: 'Rejected', assigned: 'Driver assigned', in_progress: 'On the way', completed: 'Completed', cancelled: 'Cancelled' };
+async function placesPage(msg = '', errors = {}) {
+  const pl = (await api('/api/places?all=1')).places ?? [];
+  const e = (k) => errors[k] ? `<div class="err">${esc(errors[k])}</div>` : '';
+  $('#app').innerHTML = `<p><button id="b">Back to trips</button></p><h2>Places</h2><p class="mut">Places people can pick for pickup and destination.</p>
+  ${msg ? `<p class="ok" role="status">${esc(msg)}</p>` : ''}
+  <form id="pf" class="card"><h2>Add a place</h2><label for="pn">Name</label><input id="pn" required>${e('name')}
+  <label for="pla">Latitude</label><input id="pla" inputmode="decimal" required>${e('lat')}<label for="plo">Longitude</label><input id="plo" inputmode="decimal" required>${e('lng')}
+  <p><button class="primary">Add place</button></p></form>
+  ${pl.length ? pl.map((p) => `<div class="card"><strong>${esc(p.name)}</strong> ${p.active ? '' : '<span class="chip cancelled">Hidden</span>'}<div class="mut">${p.lat}, ${p.lng}</div><p><button data-p="${esc(p.key)}" data-on="${p.active ? 0 : 1}">${p.active ? 'Hide this place' : 'Show this place'}</button></p></div>`).join('') : '<div class="card"><p>No places yet. Add the first one above.</p></div>'}`;
+  $('#b').onclick = () => render();
+  $('#pf').onsubmit = async (ev) => { ev.preventDefault(); const r = await api('/api/places', 'POST', { name: $('#pn').value, lat: $('#pla').value, lng: $('#plo').value }); placesPage(r.ok ? 'Place added.' : '', r.errors ?? {}); };
+  document.querySelectorAll('[data-p]').forEach((b) => b.onclick = async () => { const p = pl.find((x) => x.key === b.dataset.p); const r = await api('/api/places/' + p.key, 'POST', { name: p.name, lat: p.lat, lng: p.lng, active: b.dataset.on === '1' }); placesPage(r.ok ? 'Saved.' : r.error ?? ''); });
 }
 boot();

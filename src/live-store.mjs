@@ -35,7 +35,23 @@ export function createLiveStore(cfg) {
       const r = await one(`SELECT TRIM(CONCAT(name,' ',COALESCE(surname,''))) AS n FROM profiles WHERE id = ? UNION ALL SELECT TRIM(CONCAT(name,' ',COALESCE(surname,''))) FROM drivers WHERE id = ?`, [id, id]);
       return r?.n ?? id;
     },
-    async listPlaces() { return q('SELECT id AS `key`, name, latitude AS lat, longitude AS lng FROM places WHERE active = TRUE ORDER BY name'); },
+    async listPlaces(all = false) { return (await q(`SELECT id AS \`key\`, name, latitude AS lat, longitude AS lng, active FROM places ${all ? '' : 'WHERE active = TRUE'} ORDER BY name`)).map((p) => ({ ...p, active: !!p.active })); },
+    async savePlace(id, v) {
+      if (id) { const res = await q('UPDATE places SET name = ?, latitude = ?, longitude = ?, active = ? WHERE id = ?', [v.name, v.lat, v.lng, v.active !== false ? 1 : 0, id]); if (!Number(res.affectedRows) && !(await one('SELECT id FROM places WHERE id = ?', [id]))) return null; }
+      else { id = randomUUID(); await q('INSERT INTO places (id, name, latitude, longitude, active) VALUES (?,?,?,?,?)', [id, v.name, v.lat, v.lng, v.active !== false ? 1 : 0]); }
+      return { key: id, name: v.name, lat: v.lat, lng: v.lng, active: v.active !== false };
+    },
+    /** POPIA: blank the personal details of finished trips. Returns how many rows changed. */
+    async anonymiseRides(ids) {
+      if (!ids.length) return 0; const mark = ids.map(() => '?').join(',');
+      const c = await pool.getConnection();
+      try {
+        await c.beginTransaction();
+        const res = await c.query(`UPDATE rides SET pickup_address='[removed]', destination_address='[removed]', purpose=NULL, rejection_reason=NULL, destination_latitude=NULL, destination_longitude=NULL, pickup_latitude=0, pickup_longitude=0 WHERE id IN (${mark}) AND status IN ('completed','rejected','cancelled')`, ids);
+        await c.query(`UPDATE ride_events SET note=NULL WHERE ride_id IN (${mark})`, ids);
+        await c.commit(); return Number(res.affectedRows);
+      } catch (e) { await c.rollback(); throw e; } finally { c.release(); }
+    },
     async listRides(user) {
       const where = user.user_type === 'user' ? 'WHERE r.user_id = ?' : user.user_type === 'driver' ? 'WHERE r.driver_id = ?' : '';
       return q(`${RIDE_SELECT} ${where} ORDER BY r.created_at DESC LIMIT 500`, where ? [user.id] : []);

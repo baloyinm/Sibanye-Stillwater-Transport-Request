@@ -43,7 +43,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
     // --- data ---
     async nameOf(id) { return nameOf(id); },
     demoAccounts() { return users.map((u) => ({ email: u.email, role: u.user_type, name: nameOf(u.id) })); },
-    places: Object.entries(SITES).map(([k, [name, lat, lng]]) => ({ key: k, name, lat, lng })),
+    places: Object.entries(SITES).map(([k, [name, lat, lng]]) => ({ key: k, name, lat, lng, active: true })),
     async listRides(user) {
       let r = rides;
       if (user.user_type === 'user') r = r.filter((x) => x.user_id === user.id);
@@ -58,7 +58,17 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
       const ride = { id, user_id: user.id, driver_id: null, ...v, status: 'pending', distance_text: km == null ? null : `${km} km (straight line)`, duration_text: null, scheduled_status: null, rejection_reason: null, approved_by: null, approved_at: null, created_at: now(), accepted_at: null, completed_at: null, cancelled_at: null };
       rides.push(ride); event(id, user.id, 'requested'); return ride;
     },
-    async listPlaces() { return store.places; },
+    async listPlaces(all = false) { return all ? store.places.map((p) => ({ ...p })) : store.places.filter((p) => p.active !== false); },
+    async savePlace(id, v) {
+      let p = id ? store.places.find((x) => x.key === id) : null;
+      if (id && !p) return null;
+      if (!p) { p = { key: nid('p') }; store.places.push(p); }
+      Object.assign(p, { name: v.name, lat: v.lat, lng: v.lng, active: v.active !== false }); return { ...p };
+    },
+    async anonymiseRides(ids) {
+      let n = 0; for (const r of rides) if (ids.includes(r.id)) { Object.assign(r, { pickup_address: '[removed]', destination_address: '[removed]', purpose: null, rejection_reason: null, destination_latitude: null, destination_longitude: null, pickup_latitude: 0, pickup_longitude: 0 }); n++; }
+      for (const e of events) if (ids.includes(e.ride_id)) e.note = null; return n;
+    },
     async transition(ride, actor, action, to, extra = {}) {
       const r = rides.find((x) => x.id === ride.id); const stamp = now();
       r.status = to;
