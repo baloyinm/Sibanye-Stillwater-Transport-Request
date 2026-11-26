@@ -1,0 +1,6 @@
+title = "transport hub"
+[extend]
+useDefault = true
+[allowlist]
+description = "Obviously fake demo values only (exact literals)"
+regexes = ['''demo-password-001''', '''test-password-001''']
