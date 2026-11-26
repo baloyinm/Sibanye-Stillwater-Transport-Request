@@ -1,0 +1,79 @@
+{
+  "id": "S-01",
+  "title": "Ask for a trip and complete it",
+  "workflow": "Trip (default settings)",
+  "summary": "A requester asks for a trip, the controller approves it and sends a driver, and the driver starts and completes it.",
+  "route": "/",
+  "signInAs": "requester",
+  "menuPath": "My trips > Request a trip",
+  "captured": [
+    "Pickup and destination",
+    "Vehicle type",
+    "Passengers",
+    "When",
+    "Reason"
+  ],
+  "processing": "The trip appears on the controller's list as waiting for approval.",
+  "evaluation": "The controller checks the request and the nearest free driver.",
+  "decisions": "Approve or reject (with a reason).",
+  "deadlines": "No fixed time limit is built; the average time to approve is on the Reports screen.",
+  "documents": "None generated. History is shown on the trip.",
+  "records": "Status history on the trip: who did what and when.",
+  "closure": "The driver marks the trip complete.",
+  "exceptions": [
+    {
+      "when": "The controller rejects it",
+      "then": "The requester sees Rejected and the reason (see S-02)."
+    },
+    {
+      "when": "The requester no longer needs it",
+      "then": "Cancel trip, allowed until the trip is on the way."
+    }
+  ],
+  "test": "tests/e2e/guide-walk.py",
+  "inDemo": true,
+  "steps": [
+    {
+      "n": 1,
+      "role": "requester",
+      "action": "Click Request a trip",
+      "label": "Request a trip",
+      "expect": "The form 'Request a trip' opens"
+    },
+    {
+      "n": 2,
+      "role": "requester",
+      "action": "Choose the places, the vehicle and passengers, then click Send request",
+      "label": "Send request",
+      "expect": "The trip shows 'Waiting for approval'"
+    },
+    {
+      "n": 3,
+      "role": "controller",
+      "action": "Open the trip and click Approve trip",
+      "label": "Approve trip",
+      "expect": "The trip shows 'Approved, needs a driver'"
+    },
+    {
+      "n": 4,
+      "role": "controller",
+      "action": "Choose the nearest free driver and click Assign a driver",
+      "label": "Assign a driver",
+      "expect": "The trip shows 'Driver assigned'"
+    },
+    {
+      "n": 5,
+      "role": "driver",
+      "action": "Open the trip and click Start the trip",
+      "label": "Start the trip",
+      "expect": "The trip shows 'On the way'"
+    },
+    {
+      "n": 6,
+      "role": "driver",
+      "action": "Click Mark trip complete",
+      "label": "Mark trip complete",
+      "expect": "The trip shows 'Completed'"
+    }
+  ]
+}

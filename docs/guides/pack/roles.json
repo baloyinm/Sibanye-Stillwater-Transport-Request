@@ -1,0 +1,159 @@
+{
+  "roles": [
+    {
+      "id": "requester",
+      "name": "Requester",
+      "demoPerson": "Demo Requester One",
+      "description": "Asks for a trip and follows it until it is done.",
+      "can": [
+        "Request a trip for people (and for parts when switched on)",
+        "See their own trips and history",
+        "Cancel their own trip before it starts"
+      ],
+      "cannot": [
+        "Approve a trip",
+        "Choose a driver",
+        "See other people's trips",
+        "See reports"
+      ]
+    },
+    {
+      "id": "supervisor",
+      "name": "Supervisor",
+      "demoPerson": "Demo Supervisor",
+      "description": "First approver, used only when APPROVAL_CHAIN is two. Endorses or rejects pending trips.",
+      "can": [
+        "See all trips",
+        "Endorse a pending trip",
+        "Reject a trip with a reason"
+      ],
+      "cannot": [
+        "Give the final approval",
+        "Choose a driver",
+        "See reports"
+      ]
+    },
+    {
+      "id": "controller",
+      "name": "Controller",
+      "demoPerson": "Demo Controller",
+      "description": "Approves trips, chooses the driver and vehicle, and watches every trip. Also keeps the places list and reads reports.",
+      "can": [
+        "See all trips",
+        "Approve or reject a trip",
+        "Assign or remove a driver",
+        "Cancel a trip",
+        "Manage places",
+        "See reports and download trips"
+      ],
+      "cannot": [
+        "Start or complete a trip for a driver"
+      ]
+    },
+    {
+      "id": "driver",
+      "name": "Driver",
+      "demoPerson": "Demo Driver One",
+      "description": "Drives the trips given to them and shares the vehicle position.",
+      "can": [
+        "See trips assigned to them",
+        "Accept or decline an offered trip (when switched on)",
+        "Start and complete a trip",
+        "Share position and set availability"
+      ],
+      "cannot": [
+        "Approve a trip",
+        "See other drivers' trips"
+      ]
+    }
+  ],
+  "permissions": [
+    {
+      "area": "Trips",
+      "actions": [
+        {
+          "name": "Request a trip",
+          "roles": [
+            "requester"
+          ]
+        },
+        {
+          "name": "See a trip",
+          "roles": {
+            "requester": "own",
+            "supervisor": "yes",
+            "controller": "yes",
+            "driver": "own"
+          }
+        },
+        {
+          "name": "Endorse a trip (two-step setting)",
+          "roles": [
+            "supervisor"
+          ]
+        },
+        {
+          "name": "Approve a trip",
+          "roles": [
+            "controller"
+          ]
+        },
+        {
+          "name": "Reject a trip",
+          "roles": [
+            "supervisor",
+            "controller"
+          ]
+        },
+        {
+          "name": "Assign a driver",
+          "roles": [
+            "controller"
+          ]
+        },
+        {
+          "name": "Accept or decline an offer (driver-accept setting)",
+          "roles": {
+            "driver": "own"
+          }
+        },
+        {
+          "name": "Start and complete a trip",
+          "roles": {
+            "driver": "own"
+          }
+        },
+        {
+          "name": "Cancel a trip",
+          "roles": {
+            "requester": "own",
+            "controller": "yes"
+          }
+        }
+      ]
+    },
+    {
+      "area": "Administration",
+      "actions": [
+        {
+          "name": "Manage places",
+          "roles": [
+            "controller"
+          ]
+        },
+        {
+          "name": "See reports and download trips",
+          "roles": [
+            "controller"
+          ]
+        },
+        {
+          "name": "Share position and set availability",
+          "roles": [
+            "driver"
+          ]
+        }
+      ]
+    }
+  ]
+}

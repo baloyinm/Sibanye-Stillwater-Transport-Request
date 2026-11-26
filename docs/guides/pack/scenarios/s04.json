@@ -1,0 +1,80 @@
+{
+  "id": "S-04",
+  "title": "Two-step approval and driver accept",
+  "workflow": "Trip (settings: two-step approval, driver accept)",
+  "summary": "With APPROVAL_CHAIN=two and DRIVER_ACCEPT=accept, a supervisor endorses first, the controller approves, and the driver must accept the offer.",
+  "route": "/",
+  "signInAs": "requester",
+  "menuPath": "My trips > Request a trip",
+  "captured": [
+    "Pickup and destination",
+    "Vehicle type",
+    "Passengers"
+  ],
+  "processing": "The request waits for the supervisor, then the controller.",
+  "evaluation": "Two people check it before a driver is offered.",
+  "decisions": "Endorse, approve, accept.",
+  "deadlines": "None built.",
+  "documents": "None.",
+  "records": "Every step is in the history.",
+  "closure": "The driver completes the trip.",
+  "exceptions": [
+    {
+      "when": "The driver declines",
+      "then": "The trip goes back to Approved and the controller chooses another driver."
+    }
+  ],
+  "test": "tests/e2e/guide-walk.py",
+  "inDemo": true,
+  "steps": [
+    {
+      "n": 1,
+      "role": "requester",
+      "action": "Click Request a trip, fill it in and click Send request",
+      "label": "Send request",
+      "expect": "The trip shows 'Waiting for approval'"
+    },
+    {
+      "n": 2,
+      "role": "supervisor",
+      "action": "Open the trip and click Endorse trip",
+      "label": "Endorse trip",
+      "expect": "The trip shows 'Endorsed, waiting for the controller'"
+    },
+    {
+      "n": 3,
+      "role": "controller",
+      "action": "Click Approve trip",
+      "label": "Approve trip",
+      "expect": "The trip shows 'Approved, needs a driver'"
+    },
+    {
+      "n": 4,
+      "role": "controller",
+      "action": "Click Assign a driver",
+      "label": "Assign a driver",
+      "expect": "The trip shows 'Offered to the driver'"
+    },
+    {
+      "n": 5,
+      "role": "driver",
+      "action": "Click Accept this trip",
+      "label": "Accept this trip",
+      "expect": "The trip shows 'Driver assigned'"
+    },
+    {
+      "n": 6,
+      "role": "driver",
+      "action": "Click Start the trip",
+      "label": "Start the trip",
+      "expect": "The trip shows 'On the way'"
+    },
+    {
+      "n": 7,
+      "role": "driver",
+      "action": "Click Mark trip complete",
+      "label": "Mark trip complete",
+      "expect": "The trip shows 'Completed'"
+    }
+  ]
+}

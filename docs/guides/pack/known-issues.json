@@ -1,0 +1,44 @@
+[
+  {
+    "id": "K-01",
+    "area": "Messages",
+    "what": "SMS, email and WhatsApp messages are not built. Messages exist only inside the app (NOTIFY=inapp).",
+    "status": "Not built",
+    "workaround": "Controllers phone the requester for urgent changes."
+  },
+  {
+    "id": "K-02",
+    "area": "Distance",
+    "what": "Road distance and time need a routing service that has not been connected. Distances are straight-line.",
+    "status": "Not verified",
+    "workaround": "Treat distances as a guide."
+  },
+  {
+    "id": "K-03",
+    "area": "Privacy",
+    "what": "How long trip details are kept (default 730 days) has not been reviewed by the Information Officer or an attorney.",
+    "status": "Open",
+    "workaround": "Do not run the retention script with --apply until reviewed."
+  },
+  {
+    "id": "K-04",
+    "area": "Live data",
+    "what": "The live database and sign-in have not been used with real people yet.",
+    "status": "Not verified",
+    "workaround": "Use demo data only."
+  },
+  {
+    "id": "K-05",
+    "area": "Brand",
+    "what": "The documents carry a placeholder brand until the organisation brand file is supplied.",
+    "status": "Open",
+    "workaround": "None needed for a draft."
+  },
+  {
+    "id": "K-06",
+    "area": "PHP site",
+    "what": "The older PHP site is not part of this app and has not been ported.",
+    "status": "Not built",
+    "workaround": "Use the Node app (docs/DEPLOYMENT.md)."
+  }
+]

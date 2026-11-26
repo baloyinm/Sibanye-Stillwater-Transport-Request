@@ -1,0 +1,157 @@
+{
+  "legalName": "Example Organisation (Pty) Ltd",
+  "tradingName": "Example Organisation",
+  "shortName": "Example Org",
+  "registrationNo": "2000/000000/07",
+  "vatNo": "4000000000",
+  "directorsLine": "Directors: A. Director, B. Director",
+  "popiaInformationOfficer": {
+    "name": "Information Officer",
+    "email": "privacy@example.co.za"
+  },
+  "logo": {
+    "primary": "logo.png",
+    "mono": "logo-mono.png",
+    "alt": "Placeholder logo: replace with the organisation logo"
+  },
+  "address": {
+    "street": [
+      "12 Sample Road",
+      "Exampleton, 0001"
+    ],
+    "postal": [
+      "PO Box 100, Exampleton, 0001"
+    ],
+    "country": "South Africa"
+  },
+  "contacts": {
+    "tel": "012 345 6789",
+    "email": "info@example.co.za",
+    "web": "www.example.co.za",
+    "enquiriesEmail": "enquiries@example.co.za"
+  },
+  "bank": {
+    "name": "Example Bank",
+    "branchCode": "000000",
+    "accountNo": "0000000000",
+    "accountType": "Business cheque",
+    "referenceRule": "Use the document number as the payment reference"
+  },
+  "colours": {
+    "ink": "#1A1A1A",
+    "primary": "#0E2A52",
+    "accent": "#C49434",
+    "muted": "#555B66",
+    "rule": "#C9CED6",
+    "danger": "#B3261E",
+    "ok": "#1B6B3A"
+  },
+  "typography": {
+    "family": "Source Sans 3",
+    "fallback": [
+      "Arial",
+      "Helvetica"
+    ],
+    "mono": "Source Code Pro"
+  },
+  "classification": {
+    "levels": [
+      "Public",
+      "Internal",
+      "Restricted",
+      "Confidential",
+      "Secret"
+    ],
+    "default": "Internal"
+  },
+  "numbering": {
+    "pattern": "{ORG}-{TYPE}-{YYYY}-{SEQ6}",
+    "orgCode": "EXO"
+  },
+  "verification": {
+    "baseUrl": "https://verify.example.co.za/d",
+    "enabled": true
+  },
+  "confidentialityText": "This document is confidential and intended only for the addressee. Do not copy or share it without permission.",
+  "personalInfoText": "This document may contain personal information protected by the Protection of Personal Information Act 4 of 2013. Use it only for the purpose it was issued for. If you received it in error, tell the sender and delete it.",
+  "footerText": "Example Organisation (Pty) Ltd",
+  "locale": {
+    "language": "en-ZA",
+    "numberStyle": "space-comma",
+    "currency": "R",
+    "tz": "Africa/Johannesburg"
+  },
+  "vatRate": 0.15,
+  "allowAbridged": true,
+  "signatories": [
+    {
+      "id": "ceo",
+      "name": "Thandi Example",
+      "designation": "Chief Executive Officer",
+      "unit": "Office of the CEO",
+      "signatureImage": "signature-example.png",
+      "canSign": [
+        "LTR",
+        "AGR",
+        "RES",
+        "OFR",
+        "APT",
+        "CRT",
+        "SUB",
+        "NOT"
+      ]
+    },
+    {
+      "id": "cfo",
+      "name": "Sipho Sample",
+      "designation": "Chief Financial Officer",
+      "unit": "Finance",
+      "canSign": [
+        "INV",
+        "CRN",
+        "QTE",
+        "PO",
+        "STM",
+        "RCP",
+        "SUB",
+        "PAY"
+      ]
+    },
+    {
+      "id": "ops",
+      "name": "Lerato Model",
+      "designation": "Operations Manager",
+      "unit": "Operations",
+      "delegationRef": "DEL-2026-001",
+      "canSign": [
+        "JOB",
+        "INS",
+        "DNT",
+        "MIN",
+        "MEM",
+        "TMS",
+        "LTR",
+        "CRT"
+      ]
+    }
+  ],
+  "messaging": {
+    "logoUrl": "https://www.example.co.za/brand/logo.png",
+    "fromName": "Example Organisation",
+    "replyTo": "info@example.co.za",
+    "linkDomains": [
+      "verify.example.co.za"
+    ],
+    "preferencesUrl": "https://www.example.co.za/preferences",
+    "sms": {
+      "senderId": "ExampleOrg",
+      "optOutText": "Reply STOP to opt out"
+    },
+    "whatsapp": {
+      "language": "en"
+    },
+    "push": {
+      "appName": "Example"
+    }
+  }
+}

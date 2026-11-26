@@ -1,0 +1,52 @@
+{
+  "id": "S-02",
+  "title": "Reject a trip with a reason",
+  "workflow": "Trip (default settings)",
+  "summary": "The controller rejects a request and says why, so the requester knows what to do.",
+  "route": "/",
+  "signInAs": "requester",
+  "menuPath": "My trips > Request a trip",
+  "captured": [
+    "Pickup and destination",
+    "Vehicle type",
+    "Passengers"
+  ],
+  "processing": "The request waits for the controller.",
+  "evaluation": "The controller decides it cannot be done.",
+  "decisions": "Reject with a reason (required).",
+  "deadlines": "None built.",
+  "documents": "None.",
+  "records": "The reason is stored on the trip and in the history.",
+  "closure": "The trip is Rejected and final.",
+  "exceptions": [
+    {
+      "when": "No reason is typed",
+      "then": "The screen asks for a reason and nothing changes."
+    }
+  ],
+  "test": "tests/e2e/guide-walk.py",
+  "inDemo": true,
+  "steps": [
+    {
+      "n": 1,
+      "role": "requester",
+      "action": "Click Request a trip, fill it in and click Send request",
+      "label": "Send request",
+      "expect": "The trip shows 'Waiting for approval'"
+    },
+    {
+      "n": 2,
+      "role": "controller",
+      "action": "Open the trip, type a reason and click Reject trip",
+      "label": "Reject trip",
+      "expect": "The trip shows 'Rejected'"
+    },
+    {
+      "n": 3,
+      "role": "requester",
+      "action": "Open the trip to read the reason",
+      "label": null,
+      "expect": "The reason 'No vehicle is free' is shown"
+    }
+  ]
+}

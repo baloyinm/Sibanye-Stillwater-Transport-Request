@@ -1,0 +1,34 @@
+{
+  "intro": "These are demonstration accounts. Every name and trip is made up.",
+  "passwordRule": "In demo mode the sign-in screen shows buttons for each demo person: one tap signs in. The shared demo password is shown by the app in demo mode only and is never written here. Real accounts are created from the people import and have their own passwords.",
+  "accounts": [
+    {
+      "roleId": "requester",
+      "role": "Requester",
+      "person": "Demo Requester One",
+      "username": "requester1@example.test",
+      "note": "Tap the card"
+    },
+    {
+      "roleId": "supervisor",
+      "role": "Supervisor",
+      "person": "Demo Supervisor",
+      "username": "supervisor@example.test",
+      "note": "Tap the card"
+    },
+    {
+      "roleId": "controller",
+      "role": "Controller",
+      "person": "Demo Controller",
+      "username": "admin@example.test",
+      "note": "Tap the card"
+    },
+    {
+      "roleId": "driver",
+      "role": "Driver",
+      "person": "Demo Driver One",
+      "username": "driver1@example.test",
+      "note": "Tap the card"
+    }
+  ]
+}

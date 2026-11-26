@@ -1,0 +1,51 @@
+{
+  "id": "S-03",
+  "title": "Read reports and keep the places list",
+  "workflow": "Administration",
+  "summary": "The controller reads the summary, downloads the trips and adds a place people can pick.",
+  "route": "/",
+  "signInAs": "controller",
+  "menuPath": "All trips > Reports and Places",
+  "captured": [
+    "Date range",
+    "Place name and map position"
+  ],
+  "processing": "The report counts trips by status and vehicle; new places appear in the request form.",
+  "evaluation": "The controller checks volumes and waiting times.",
+  "decisions": "Which places to offer.",
+  "deadlines": "None.",
+  "documents": "The trips download (CSV).",
+  "records": "Place and trip lists.",
+  "closure": "The place is added or hidden.",
+  "exceptions": [
+    {
+      "when": "A map position is not valid",
+      "then": "The screen says which field to fix."
+    }
+  ],
+  "test": "tests/e2e/guide-walk.py",
+  "inDemo": true,
+  "steps": [
+    {
+      "n": 1,
+      "role": "controller",
+      "action": "Click Reports",
+      "label": "Reports",
+      "expect": "The report 'By status' is shown"
+    },
+    {
+      "n": 2,
+      "role": "controller",
+      "action": "Click Back to trips, then Places",
+      "label": "Places",
+      "expect": "The page 'Places' opens"
+    },
+    {
+      "n": 3,
+      "role": "controller",
+      "action": "Type a name and map position and click Add place",
+      "label": "Add place",
+      "expect": "'Place added.' is shown"
+    }
+  ]
+}

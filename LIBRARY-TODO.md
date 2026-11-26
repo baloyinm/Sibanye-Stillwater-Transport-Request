@@ -7,3 +7,4 @@
 - 2026-11-26 · Settings-driven workflow table (approval chain, driver accept) · MODIFY data/dispatch-request-schema · one rule table built from settings
 - 2026-11-26 · OSRM road route client with fallback (`lib/routing.mjs`) · ADD integrations/osrm-road-route-client · any app wanting road km and minutes
 - 2026-11-26 · Playwright role walk of a full workflow with all settings (`tests/e2e/ui-walk.py`) · ADD ui/role-walk-template · proof pattern for rule W5
+- 2026-11-26 · Multi-role guide walker (reads pack scenarios, signs in per step, screenshots) · MODIFY ui/guide-steps-test-runner · it cannot switch role inside one scenario

@@ -11,7 +11,9 @@
     "build": "node scripts/build-pwa.mjs",
     "start": "node src/server.mjs",
     "test": "node --test tests/*.test.mjs",
-    "import:check": "node scripts/import.mjs --check"
+    "import:check": "node scripts/import.mjs --check",
+    "guide:walk": "python3 tests/e2e/guide-walk.py",
+    "guide:build": "python3 $LIBRARY/rules/user-guide-template/pack/build_pack.py docs/guides/pack/pack.json --strict"
   },
   "dependencies": {
     "mariadb": "^3.5.5"

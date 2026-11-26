@@ -1,0 +1,58 @@
+{
+  "app": {
+    "name": "Transport Hub",
+    "short": "Transport Hub"
+  },
+  "version": "v0.2",
+  "date": "2026-11-26",
+  "author": "Transport Hub project",
+  "owner": {
+    "name": "Ntsakisi Baloyi",
+    "designation": "Chief Operations Officer"
+  },
+  "status": "DRAFT",
+  "preparedFor": "Requesters, supervisors, controllers and drivers using the Transport Hub",
+  "org": "org/org.json",
+  "contentDir": "content",
+  "rolesFile": "roles.json",
+  "accountsFile": "accounts.json",
+  "scenariosDir": "scenarios",
+  "knownIssuesFile": "known-issues.json",
+  "screens": "screens",
+  "out": "out",
+  "provisionalNote": "Draft: shows demonstration data only. The organisation brand on the cover is a placeholder until the real brand file is supplied.",
+  "glossary": [
+    [
+      "Trip",
+      "One journey for people or parts, from request to completion"
+    ],
+    [
+      "Requester",
+      "The person who asks for a trip"
+    ],
+    [
+      "Controller",
+      "The person who approves trips and sends drivers"
+    ],
+    [
+      "Supervisor",
+      "An optional first approver, used only when the two-step setting is on"
+    ],
+    [
+      "Driver",
+      "The person who drives the trip and shares the vehicle position"
+    ],
+    [
+      "Scenario",
+      "One piece of work followed from request to closure"
+    ],
+    [
+      "Cost centre",
+      "The budget code a trip is charged to"
+    ],
+    [
+      "Rotables",
+      "Parts that are moved between sites to be repaired or reused"
+    ]
+  ]
+}
