@@ -26,10 +26,10 @@ function signIn(m, error = '') {
   document.querySelectorAll('[data-e]').forEach((b) => b.onclick = () => { $('#e').value = b.dataset.e; $('#p').value = m.demoPassword; $('#f').requestSubmit(); });
   $('#f').onsubmit = async (ev) => { ev.preventDefault(); const r = await api('/api/login', 'POST', { email: $('#e').value, password: $('#p').value }); if (!r.ok) return signIn(m, r.error); me = r.user; draw(...parseHash()); };
 }
-function parseHash() { const m = location.hash.match(/^#\/(new|trip|reports|places)(?:\/([\w-]+))?$/); return m ? [m[1], m[2]] : ['list']; }
+function parseHash() { const m = location.hash.match(/^#\/(new|trip|reports|places|guide)(?:\/([\w-]+))?$/); return m ? [m[1], m[2]] : ['list']; }
 window.addEventListener('hashchange', () => { if (me) draw(...parseHash()); });
 function render(view = 'list', id) {
-  const h = ['new', 'reports', 'places'].includes(view) ? '#/' + view : view === 'trip' ? '#/trip/' + id : '#/';
+  const h = ['new', 'reports', 'places', 'guide'].includes(view) ? '#/' + view : view === 'trip' ? '#/trip/' + id : '#/';
   if (location.hash === h || (h === '#/' && location.hash === '')) draw(view, id); else location.hash = h;
 }
 function draw(view = 'list', id) {
@@ -37,14 +37,14 @@ function draw(view = 'list', id) {
   const role = { user: 'Requester', admin: 'Controller', driver: 'Driver', supervisor: 'Supervisor' }[me.user_type];
   $('#who').innerHTML = `${esc(me.name)} (${role}) <button class="link" id="out">Sign out</button>`;
   $('#out').onclick = async () => { await api('/api/logout', 'POST'); boot(); };
-  if (view === 'reports' && me.user_type === 'admin') return reportsPage(); if (view === 'places' && me.user_type === 'admin') return placesPage(); if (view === 'new') return newTrip(); if (view === 'trip') return tripPage(id); return list();
+  if (view === 'reports' && me.user_type === 'admin') return reportsPage(); if (view === 'places' && me.user_type === 'admin') return placesPage(); if (view === 'guide') return guidePage(); if (view === 'new') return newTrip(); if (view === 'trip') return tripPage(id); return list();
 }
 async function list() {
   const r = await api('/api/rides'); const rides = r.rides ?? [];
   const title = { user: 'My trips', admin: 'All trips', supervisor: 'All trips', driver: 'My assigned trips' }[me.user_type];
   const nt = (await api('/api/notices')).notices ?? [];
   $('#app').innerHTML = `<h2>${title}</h2>${me.user_type === 'user' ? '<p><button class="primary" id="new">Request a trip</button></p>' : ''}
-  ${me.user_type === 'admin' ? '<p class="row"><button id="rep">Reports</button><button id="plc">Places</button></p>' : ''}
+  <p class="row">${me.user_type === 'admin' ? '<button id="rep">Reports</button><button id="plc">Places</button>' : ''}<button id="gd">User guide</button></p>
   ${me.user_type === 'driver' ? driverPanel() : ''}
   ${nt.length ? `<div class="card"><h2>Messages</h2><ul class="plain">${nt.slice(0, 5).map((n) => `<li>${n.read_at ? '' : '<strong>New: </strong>'}${esc(n.text)}</li>`).join('')}</ul>${nt.some((n) => !n.read_at) ? '<p><button id="nr">Mark messages as read</button></p>' : ''}</div>` : ''}
   ${rides.length ? rides.map((x) => `<div class="card"><div class="row" style="justify-content:space-between"><strong>${esc(x.pickup_address)} to ${esc(x.destination_address)}</strong>${chip(x)}</div>
@@ -52,6 +52,7 @@ async function list() {
     <p><button data-id="${esc(x.id)}">Open trip</button></p></div>`).join('') : `<div class="card"><p>No trips yet.</p><p class="mut">${me.user_type === 'user' ? 'Choose "Request a trip" to ask for one.' : me.user_type === 'admin' ? 'New requests will appear here.' : 'Trips assigned to you will appear here.'}</p></div>`}`;
   $('#nr')?.addEventListener('click', async () => { await api('/api/notices/read', 'POST'); list(); });
   $('#new')?.addEventListener('click', () => render('new'));
+  $('#gd')?.addEventListener('click', () => render('guide'));
   $('#rep')?.addEventListener('click', () => render('reports')); $('#plc')?.addEventListener('click', () => render('places'));
   document.querySelectorAll('[data-id]').forEach((b) => b.onclick = () => render('trip', b.dataset.id));
   bindDriver(); if (me.user_type !== 'user' || rides.length) timer = setInterval(() => document.hidden || list(), 15000);
@@ -118,6 +119,12 @@ async function tripPage(id, msg = '', errors = {}) {
     tripPage(id, res.ok ? 'Done.' : '', res.ok ? {} : { ...(res.errors ?? {}), error: res.error });
   });
   if (['assigned', 'in_progress'].includes(x.status)) timer = setInterval(() => document.hidden || tripPage(id, msg), 10000);
+}
+async function guidePage() {
+  const r = await api('/api/guide'); const files = r.files ?? [];
+  $('#app').innerHTML = `<p><button id="b">Back to trips</button></p><h2>User guide</h2><p class="mut">Step-by-step guides for every role, with pictures. Made-up demo people and data only.</p>
+  <div class="card">${files.length ? `<ul class="plain">${files.map((f) => `<li><a href="/api/guide/${esc(f.name)}" download>${esc(f.name.replace(/\.[a-z]+$/i, '').replace(/[_-]+/g, ' '))}</a> <span class="mut">(${esc(f.kind)}, ${f.kb} KB)</span></li>`).join('')}</ul>` : '<p>The guide has not been published with this copy of the app yet. Ask the controller.</p>'}</div>`;
+  $('#b').onclick = () => render();
 }
 async function reportsPage(from = '', to = '') {
   const qs = new URLSearchParams(); if (from) qs.set('from', from); if (to) qs.set('to', to);

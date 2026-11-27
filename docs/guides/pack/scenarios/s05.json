@@ -1,0 +1,57 @@
+{
+  "id": "S-05",
+  "title": "Print the trip sheet and find the user guide",
+  "workflow": "Trip requests",
+  "summary": "The requester prints the sheet for a trip and opens the user guide from the trips page.",
+  "route": "/",
+  "signInAs": "requester",
+  "menuPath": "My trips > Request a trip; trip page > Print trip sheet; My trips > User guide",
+  "captured": [
+    "Trip details"
+  ],
+  "processing": "The trip sheet is made from the trip and its history; nothing is stored.",
+  "evaluation": "The requester checks the sheet before the trip.",
+  "decisions": "None.",
+  "deadlines": "None.",
+  "documents": "Trip sheet (print page); user guide (PDF and Word).",
+  "records": "Trip and history.",
+  "closure": "The sheet is printed or saved as PDF.",
+  "exceptions": [
+    {
+      "when": "The trip belongs to someone else",
+      "then": "The sheet is not shown (trip not found)."
+    }
+  ],
+  "test": "tests/e2e/guide-walk.py; tests/documents.test.mjs",
+  "inDemo": true,
+  "steps": [
+    {
+      "n": 1,
+      "role": "requester",
+      "action": "Click Request a trip",
+      "label": "Request a trip",
+      "expect": "The form 'Request a trip' opens"
+    },
+    {
+      "n": 2,
+      "role": "requester",
+      "action": "Click Send request",
+      "label": "Send request",
+      "expect": "The 'Next step' box is shown"
+    },
+    {
+      "n": 3,
+      "role": "requester",
+      "action": "Find the Print trip sheet button under History",
+      "label": "Print trip sheet",
+      "expect": "The button 'Print trip sheet' is shown"
+    },
+    {
+      "n": 4,
+      "role": "requester",
+      "action": "Go back to My trips and click User guide",
+      "label": "User guide",
+      "expect": "The page 'User guide' opens"
+    }
+  ]
+}

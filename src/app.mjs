@@ -9,6 +9,7 @@ import { timingSafeEqual } from 'node:crypto';
 import { createMessenger } from './messaging.mjs';
 import { loadOrg } from './org.mjs';
 import { tripSheetHtml } from './documents.mjs';
+import { listGuide, guideFile } from './guide.mjs';
 
 const AUTH = { login_col: 'email', password_col: 'password_hash', role_col: 'user_type', status_col: '', public_fields: ['id', 'email', 'user_type'] };
 const json = (status, body, extra = {}) => ({ status, body, ...extra });
@@ -61,6 +62,8 @@ export function createApp(store, cfg = {}, fetchFn = fetch) {
 
     if (method === 'GET' && path === '/api/notices') return reply(200, { notices: settings.notify !== 'off' ? await store.listNotices(user.id) : [] });
     if (method === 'POST' && path === '/api/notices/read') { await store.markNoticesRead(user.id); return reply(200, { ok: true }); }
+    if (method === 'GET' && path === '/api/guide') return reply(200, { files: listGuide(cfg.guideDir) });
+    if (method === 'GET' && /^\/api\/guide\/\w[\w.-]*$/.test(path)) { const f = guideFile(cfg.guideDir, path.split('/')[3]); return f ? { status: 200, file: f, setCookie: cookie() } : reply(404, { error: 'That document was not found.' }); }
     if (method === 'GET' && path === '/api/outbox') {
       if (!roleIs('admin')) return reply(403, { error: 'Only the controller can see the message log.' });
       return reply(200, { enabled: !!messenger, line: messenger?.startupLine() ?? null, entries: (messenger?.outbox ?? []).slice(-50).reverse().map((e) => ({ at: e.at, channel: e.channel, mode: e.mode, action: e.action, outcome: e.outcome, reason: e.reason, redirected: e.redirectedTo.length > 0 })) });

@@ -20,6 +20,7 @@ export function buildServer(app) {
         let body = {}; if (raw) { try { body = JSON.parse(raw); } catch { rs.writeHead(400, { ...SEC, 'Content-Type': 'application/json' }).end('{"error":"Bad request body."}'); return; } }
         const out = await app({ method: rq.method, path: url.pathname, query: Object.fromEntries(url.searchParams), headers: rq.headers, body, https: rq.headers['x-forwarded-proto'] === 'https', ip: rq.socket.remoteAddress });
         if (out.csv != null) { rs.writeHead(200, { ...SEC, 'Content-Type': 'text/csv; charset=utf-8', 'Content-Disposition': 'attachment; filename="trips.csv"', 'Cache-Control': 'no-store', ...(out.setCookie ? { 'Set-Cookie': out.setCookie } : {}) }); rs.end(out.csv); return; }
+        if (out.file) { rs.writeHead(200, { ...SEC, 'Content-Type': out.file.type, 'Content-Disposition': `attachment; filename="${out.file.name}"`, 'Cache-Control': 'no-store', ...(out.setCookie ? { 'Set-Cookie': out.setCookie } : {}) }); rs.end(out.file.data); return; }
         if (out.html != null) { rs.writeHead(200, { ...SEC, 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store', ...(out.setCookie ? { 'Set-Cookie': out.setCookie } : {}) }); rs.end(out.html); return; }
         rs.writeHead(out.status, { ...SEC, 'Content-Type': 'application/json', 'Cache-Control': 'no-store', ...(out.setCookie ? { 'Set-Cookie': out.setCookie } : {}) });
         rs.end(JSON.stringify(out.body)); return;

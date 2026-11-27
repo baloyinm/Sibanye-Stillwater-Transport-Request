@@ -38,6 +38,10 @@ try:
                     elif lab == 'Places': pg.goto(base + '#/places'); pg.reload(); pg.wait_for_selector('#pf')
                     elif lab == 'Reports': pg.click('#rep'); pg.wait_for_selector('text=By status')
                     elif lab == 'Add place': pg.fill('#pn', 'Demo Gate Z'); pg.fill('#pla', '-26.5'); pg.fill('#plo', '27.5'); pg.click('#pf button'); pg.wait_for_selector('text=Place added.')
+                    elif lab == 'Print trip sheet':
+                        assert pg.query_selector(f'a[href^="/api/rides/{tid}/sheet"]'), 'no print link'
+                        r = pg.request.get(base + f'api/rides/{tid}/sheet'); assert r.ok and 'Trip sheet' in r.text(), 'sheet not served'
+                    elif lab == 'User guide': pg.goto(base); pg.reload(); pg.wait_for_selector('#gd'); pg.click('#gd'); pg.wait_for_selector('text=Made-up demo people')
                     elif lab is None: pg.goto(base + '#/trip/' + tid); pg.reload(); pg.wait_for_selector('.card')
                     else: pg.click(f'button:has-text("{lab}")'); pg.wait_for_timeout(400)
                     text = re.sub(r'\s+', ' ', pg.inner_text('body')).lower()
