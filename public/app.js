@@ -109,7 +109,7 @@ async function tripPage(id, msg = '', errors = {}) {
   ${x.actions.includes('reject') ? `<label for="rs">Reason for rejecting</label><input id="rs" maxlength="300">${errors.reason ? `<div class="err">${esc(errors.reason)}</div>` : ''}` : ''}
   ${x.actions.includes('assign') ? `<label for="dv">Driver (nearest free first)</label><select id="dv">${drivers.map((d) => `<option value="${esc(d.id)}" ${d.is_available ? '' : 'disabled'}>${esc(d.name)} · ${esc(d.car_type)}${d.km_to_pickup != null ? ' · ' + d.km_to_pickup + ' km away' : ''}${d.is_available ? '' : d.busy ? ' (on a trip)' : ' (off duty)'}</option>`).join('')}</select>` : ''}
   <p class="row">${x.actions.map((a) => `<button data-a="${a}" class="${['approve', 'endorse', 'accept', 'assign', 'start', 'complete'].includes(a) ? 'primary' : ''}">${BTN[a]}</button>`).join('')}</p></div>
-  <div class="card"><h2>History</h2><ol class="tl">${r.events.map((e) => `<li>${esc(LABEL[e.type] ?? e.type)} by ${esc(e.actor)}${e.note ? ' (' + esc(e.note) + ')' : ''} <span class="mut">${when(e.at)}</span></li>`).join('')}</ol></div>`;
+  <div class="card"><h2>History</h2><p><a class="btn" href="/api/rides/${esc(id)}/sheet" target="_blank" rel="noopener">Print trip sheet</a></p><ol class="tl">${r.events.map((e) => `<li>${esc(LABEL[e.type] ?? e.type)} by ${esc(e.actor)}${e.note ? ' (' + esc(e.note) + ')' : ''} <span class="mut">${when(e.at)}</span></li>`).join('')}</ol></div>`;
   $('#b').onclick = () => render();
   document.querySelectorAll('[data-a]').forEach((b) => b.onclick = async () => {
     const a = b.dataset.a; const body = a === 'reject' ? { reason: $('#rs').value } : a === 'assign' ? { driver_id: $('#dv').value } : {};
@@ -121,7 +121,7 @@ async function tripPage(id, msg = '', errors = {}) {
 }
 async function reportsPage(from = '', to = '') {
   const qs = new URLSearchParams(); if (from) qs.set('from', from); if (to) qs.set('to', to);
-  const r = await api('/api/reports/summary?' + qs); const s = r.summary;
+  const r = await api('/api/reports/summary?' + qs); const s = r.summary; const ob = await api('/api/outbox');
   const rows = (o) => Object.entries(o).filter(([, n]) => n).map(([k, n]) => `<tr><th scope="row">${esc(LABELS_S[k] ?? k)}</th><td>${n}</td></tr>`).join('') || '<tr><td colspan="2">None in this period.</td></tr>';
   $('#app').innerHTML = `<p><button id="b">Back to trips</button></p><h2>Reports</h2>
   ${r.ok ? '' : `<p class="err" role="alert">${esc(r.error ?? 'Check the dates.')}</p>`}
@@ -130,7 +130,8 @@ async function reportsPage(from = '', to = '') {
   ${s ? `<div class="card"><h2>${s.total} trip(s)</h2><table><caption class="mut">By status</caption><tbody>${rows(s.by_status)}</tbody></table>
   <table><caption class="mut">By vehicle type</caption><tbody>${rows(s.by_vehicle)}</tbody></table>
   <p>Completed: ${s.completed_passengers} passenger(s), ${s.completed_km_straight_line} km (straight line).</p>
-  <p>Average time to approve: ${s.avg_minutes_to_approve == null ? 'no approved trips yet' : s.avg_minutes_to_approve + ' minute(s)'}.</p></div>` : ''}`;
+  <p>Average time to approve: ${s.avg_minutes_to_approve == null ? 'no approved trips yet' : s.avg_minutes_to_approve + ' minute(s)'}.</p></div>` : ''}
+  <div class="card"><h2>Messages sent</h2>${ob.enabled ? `<p class="mut">${esc(ob.line)}. In redirect mode a message goes only to the test inbox, never to the real person.</p>${ob.entries.length ? `<table><caption class="mut">Latest messages</caption><thead><tr><th scope="col">When</th><th scope="col">Channel</th><th scope="col">What happened</th></tr></thead><tbody>${ob.entries.slice(0, 10).map((e) => `<tr><td>${when(e.at)}</td><td>${esc(e.channel)}</td><td>${esc(e.action === 'block' ? 'Not sent: ' + e.reason : e.redirected ? 'Sent to the test inbox only' : 'Sent')}</td></tr>`).join('')}</tbody></table>` : '<p>No messages yet.</p>'}` : '<p>Email and SMS messages are switched off (setting NOTIFY).</p>'}</div>`;
   $('#b').onclick = () => render();
   $('#rf').onsubmit = (ev) => { ev.preventDefault(); reportsPage($('#rfrom').value ? $('#rfrom').value + 'T00:00:00+02:00' : '', $('#rto').value ? $('#rto').value + 'T23:59:59+02:00' : ''); };
 }

@@ -12,7 +12,7 @@ export function loadSettings(env = process.env) {
     costCentre: pick(env, 'COST_CENTRE', ['off', 'optional', 'required'], 'off'),    // Q3
     vehicleTypes: String(env.VEHICLE_TYPES || 'Sedan,Bakkie,Minibus,Truck').split(',').map((x) => x.trim()).filter(Boolean), // Q3
     driverAccept: pick(env, 'DRIVER_ACCEPT', ['auto', 'accept'], 'auto'),            // Q4 auto = assigned at once; accept = driver must accept or decline
-    notify: pick(env, 'NOTIFY', ['off', 'inapp'], 'off'),                            // Q5 inapp = messages inside the app only. SMS and email are never sent from this app.
+    notify: pick(env, 'NOTIFY', ['off', 'inapp', 'messages'], 'off'),                // Q5 inapp = messages inside the app; messages = inapp plus email and SMS through the delivery mode (COMMS_MODE, default redirect: test inbox only)
     routing: pick(env, 'ROUTING', ['straight', 'road'], 'straight'),                 // Q6 road needs ROUTING_URL (an OSRM-compatible service)
     routingUrl: env.ROUTING_URL || '',
     tracking: pick(env, 'TRACKING', ['phone', 'tracker'], 'phone'),                  // Q7 tracker = vehicle trackers post positions with TRACKER_TOKEN

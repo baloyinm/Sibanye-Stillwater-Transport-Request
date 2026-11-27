@@ -99,6 +99,7 @@ export function createLiveStore(cfg) {
       } catch (e) { await c.rollback(); throw e; } finally { c.release(); }
       return store.getRide(ride.id);
     },
+    async contactOf(id) { const r = await one(`SELECT email, phone FROM users WHERE id = ?`, [id]); return r ? { name: await store.nameOf(id), email: r.email, phone: r.phone ?? null } : null; },
     async addNotice(userId, rideId, text) { await q('INSERT INTO notices (user_id, ride_id, text) VALUES (?,?,?)', [userId, rideId, text]); },
     async listNotices(userId) { return q('SELECT id, ride_id, text, created_at, read_at FROM notices WHERE user_id = ? ORDER BY id DESC LIMIT 20', [userId]); },
     async markNoticesRead(userId) { await q('UPDATE notices SET read_at = UTC_TIMESTAMP() WHERE user_id = ? AND read_at IS NULL', [userId]); },

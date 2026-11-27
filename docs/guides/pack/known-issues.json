@@ -2,9 +2,9 @@
   {
     "id": "K-01",
     "area": "Messages",
-    "what": "SMS, email and WhatsApp messages are not built. Messages exist only inside the app (NOTIFY=inapp).",
-    "status": "Not built",
-    "workaround": "Controllers phone the requester for urgent changes."
+    "what": "Email and SMS messages are built and checked, but no sending service is connected: with NOTIFY=messages every message is only recorded, and in redirect mode would go to a test inbox. WhatsApp is not built.",
+    "status": "Waiting for the owner",
+    "workaround": "Messages inside the app work now. Controllers phone the requester for urgent changes."
   },
   {
     "id": "K-02",

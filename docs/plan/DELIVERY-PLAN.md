@@ -50,3 +50,10 @@ Database: `database/003_settings.sql` (needed for supervisor, new statuses, cost
 
 ## User guide pack (round 2)
 `docs/guides/pack/` holds the 13-document pack (rules/user-guide-template 2.2.0, read-only library clone), built to `out/pdf-docx/` as PDF and DOCX. Build: 0 PROBLEM, 3 WARN (S-02 step 3 is information only; no COST-MODEL.md, an internal tool, rule C5). Four scenarios (S-01 trip, S-02 reject, S-03 reports and places, S-04 two-step approval and driver accept), walked in a real browser by `tests/e2e/guide-walk.py` (19 steps, 0 failures, 19 screenshots, which fill the slots). The library's `ui/guide-steps-test-runner` was NOT used: it signs in once per scenario and these scenarios cross roles; the Python walker does the same checks. The brand on the cover is the library's placeholder (known issue K-05). An in-app "User guide" page with downloads is NOT BUILT.
+
+## Round 3 (27 Nov 2026)
+| Item | Built | Proof |
+|---|---|---|
+| Messages (Q5) email and SMS through `email/message-channels-kit` and the delivery-mode guard | yes: `NOTIFY=messages`, default redirect, blocked with no test inbox, outbox log for the controller, optional phone per user (`database/004_contact_phone.sql`). NO real provider is connected and nothing is sent. | `tests/messaging.test.mjs` (5), live MariaDB `contactOf`, browser walk |
+| Documents | yes: trip sheet and parts transport sheet (print HTML) with `email/document-style-kit` | `tests/documents.test.mjs`, document checker |
+| Driver accept, road routing, rotables, tracker | already built in round 2; re-proven by the browser walk and tests | `tests/settings.test.mjs`, `tests/e2e/ui-walk.py` |

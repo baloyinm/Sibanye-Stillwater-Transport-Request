@@ -1,7 +1,31 @@
 {
   "note": "Pinned copies of library components (baloyinm/Re-usable-Component). Do not edit here; change the component in the library.",
   "components": {
-    "data/php-session-auth-guard": { "version": "1.1.0", "file": "lib/auth_guard.mjs", "library_commit": "ed556b6" },
-    "business/geo-distance-rule": { "version": "1.0.0", "file": "lib/geo_distance.mjs", "note": "plain JavaScript port of geoDistance.ts", "library_commit": "ed556b6" }
+    "data/php-session-auth-guard": {
+      "version": "1.1.0",
+      "file": "lib/auth_guard.mjs",
+      "library_commit": "ed556b6"
+    },
+    "business/geo-distance-rule": {
+      "version": "1.0.0",
+      "file": "lib/geo_distance.mjs",
+      "note": "plain JavaScript port of geoDistance.ts",
+      "library_commit": "ed556b6"
+    },
+    "email/message-channels-kit": {
+      "version": "1.2.0",
+      "file": "lib/message-channels-kit/",
+      "note": "compiled from TypeScript, logic unchanged"
+    },
+    "integrations/email-sms-messaging": {
+      "version": "1.6.0",
+      "file": "lib/email-sms-messaging/",
+      "note": "delivery-mode and types, compiled from TypeScript"
+    },
+    "email/document-style-kit": {
+      "version": "1.18.0",
+      "file": "lib/document-style-kit/",
+      "note": "source copied unchanged, run by Node type stripping"
+    }
   }
 }

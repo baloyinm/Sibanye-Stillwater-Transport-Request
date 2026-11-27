@@ -17,7 +17,7 @@ const conn = () => mariadb.createConnection({ socketPath: E.LIVE_TEST_SOCKET, ho
 test('live store: full flow on MariaDB', T, async () => {
   const c = await conn();
   await c.query('SET FOREIGN_KEY_CHECKS=0'); for (const t of ['ride_events', 'rides', 'drivers', 'profiles', 'users', 'places', 'auth_rate_limits', 'notices']) await c.query(`DROP TABLE IF EXISTS ${t}`); await c.query('SET FOREIGN_KEY_CHECKS=1');
-  for (const f of ['schema.mariadb.sql', '002_request_workflow.sql', '003_settings.sql']) await c.query(readFileSync(new URL(`../database/${f}`, import.meta.url), 'utf8'));
+  for (const f of ['schema.mariadb.sql', '002_request_workflow.sql', '003_settings.sql', '004_contact_phone.sql']) await c.query(readFileSync(new URL(`../database/${f}`, import.meta.url), 'utf8'));
   const h = await hashPassword('test-password-001');
   for (const [id, email, type] of [['u1', 'u1@example.test', 'user'], ['u2', 'u2@example.test', 'user'], ['a1', 'a1@example.test', 'admin'], ['d1', 'd1@example.test', 'driver'], ['d2', 'd2@example.test', 'driver'], ['s1', 's1@example.test', 'supervisor']]) await c.query('INSERT INTO users (id,email,password_hash,user_type) VALUES (?,?,?,?)', [id, email, h, type]);
   await c.query("INSERT INTO profiles (id,name,surname,role) VALUES ('u1','Test','One','user'),('u2','Test','Two','user'),('a1','Test','Admin','admin'),('s1','Test','Super','supervisor')");
@@ -78,5 +78,6 @@ test('live store: full flow on MariaDB', T, async () => {
     assert.ok(due.some((r) => r.id === pid)); assert.equal(await store.anonymiseRides(due.map((r) => r.id)), due.length);
     const gone = await store.getRide(pid); assert.equal(gone.pickup_address, '[removed]'); assert.equal(gone.items, null);
     assert.equal(dueForAnonymising(await store.listRides({ user_type: 'admin' }), 365).length, 0);
+    const cn = await store.contactOf('u1'); assert.deepEqual(cn, { name: 'Test One', email: 'u1@example.test', phone: null }); // 004 phone column exists
   } finally { await store.close(); }
 });

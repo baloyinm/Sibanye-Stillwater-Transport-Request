@@ -6,6 +6,9 @@ import { LABELS, allowedActions, validateNewRide, buildActions } from './workflo
 import { loadSettings, publicSettings } from './settings.mjs';
 import { roadRoute } from '../lib/routing.mjs';
 import { timingSafeEqual } from 'node:crypto';
+import { createMessenger } from './messaging.mjs';
+import { loadOrg } from './org.mjs';
+import { tripSheetHtml } from './documents.mjs';
 
 const AUTH = { login_col: 'email', password_col: 'password_hash', role_col: 'user_type', status_col: '', public_fields: ['id', 'email', 'user_type'] };
 const json = (status, body, extra = {}) => ({ status, body, ...extra });
@@ -14,7 +17,13 @@ export function createApp(store, cfg = {}, fetchFn = fetch) {
   const settings = cfg.settings ?? loadSettings({});
   const ACTIONS = buildActions(settings);
   const view = (store, user, ride) => ({ ...ride, label: LABELS[ride.status], actions: allowedActions(user, ride, ACTIONS) });
-  const notify = async (userId, rideId, text) => { if (settings.notify === 'inapp' && userId) await store.addNotice(userId, rideId, text); };
+  const org = cfg.org ?? loadOrg(cfg.env ?? process.env);
+  const messenger = settings.notify === 'messages' ? (cfg.messenger ?? createMessenger({ org, env: cfg.env ?? process.env })) : null;
+  const notify = async (userId, rideId, text) => {
+    if (!userId || settings.notify === 'off') return;
+    await store.addNotice(userId, rideId, text);
+    if (messenger) { try { const c = await store.contactOf(userId); if (c) await messenger.send(c, { title: 'Transport trip update', text, reference: rideId }); } catch (e) { console.warn('message not sent:', e.message); } }
+  };
   const safeEq = (a, b) => { const x = Buffer.from(String(a)), y = Buffer.from(String(b)); return x.length === y.length && timingSafeEqual(x, y); };
   const sessions = guard.memorySessionStore();
   const auth = { ...AUTH, allowed_origins: cfg.allowedOrigins ?? [] };
@@ -50,8 +59,12 @@ export function createApp(store, cfg = {}, fetchFn = fetch) {
     const roleIs = (...r) => guard.roleStatus(user, r, auth) === 200;
     const me = { id: user.id, email: user.email, user_type: user.user_type, name: await store.nameOf(user.id) };
 
-    if (method === 'GET' && path === '/api/notices') return reply(200, { notices: settings.notify === 'inapp' ? await store.listNotices(user.id) : [] });
+    if (method === 'GET' && path === '/api/notices') return reply(200, { notices: settings.notify !== 'off' ? await store.listNotices(user.id) : [] });
     if (method === 'POST' && path === '/api/notices/read') { await store.markNoticesRead(user.id); return reply(200, { ok: true }); }
+    if (method === 'GET' && path === '/api/outbox') {
+      if (!roleIs('admin')) return reply(403, { error: 'Only the controller can see the message log.' });
+      return reply(200, { enabled: !!messenger, line: messenger?.startupLine() ?? null, entries: (messenger?.outbox ?? []).slice(-50).reverse().map((e) => ({ at: e.at, channel: e.channel, mode: e.mode, action: e.action, outcome: e.outcome, reason: e.reason, redirected: e.redirectedTo.length > 0 })) });
+    }
     if (method === 'GET' && path === '/api/me') return reply(200, { user: me, mode: store.mode });
     if (method === 'GET' && path === '/api/places') return reply(200, { places: await store.listPlaces(roleIs('admin') && req.query?.all === '1') });
     if (method === 'POST' && (path === '/api/places' || /^\/api\/places\/[\w-]+$/.test(path))) {
@@ -121,6 +134,12 @@ export function createApp(store, cfg = {}, fetchFn = fetch) {
         km_to_destination: distanceKm(d.current_latitude, d.current_longitude, ride.destination_latitude, ride.destination_longitude),
         vehicle: `${d.car_type ?? ''} ${d.registration_number ?? ''}`.trim() } : null;
       return reply(200, { ride: view(store, user, ride), events: await store.rideEvents(ride.id), track });
+    }
+    m = path.match(/^\/api\/rides\/([\w-]+)\/sheet$/);
+    if (method === 'GET' && m) {
+      const ride = await store.getRide(m[1]);
+      if (!ride || !canSee(user, ride)) return reply(404, { error: 'That trip was not found.' });
+      return { status: 200, html: tripSheetHtml(ride, await store.rideEvents(ride.id), org), setCookie: cookie() };
     }
     m = path.match(/^\/api\/rides\/([\w-]+)\/(\w+)$/);
     if (method === 'POST' && m && ACTIONS[m[2]]) {

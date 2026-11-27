@@ -14,7 +14,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
   let seq = 100;
   const nid = (p) => `${p}-${++seq}`;
   const addUser = (id, email, type, name, surname, extra = {}) => {
-    users.push({ id, email, password_hash: hash, user_type: type, created_at: now() });
+    users.push({ id, email, password_hash: hash, user_type: type, phone: extra.phone ?? null, created_at: now() });
     if (type === 'driver') drivers.push({ id, name, surname, z_number: extra.z, mining_operation: 'Demo Operation', car_type: extra.car, registration_number: extra.reg, is_available: true, current_latitude: extra.lat, current_longitude: extra.lng, created_at: now() });
     else profiles.push({ id, name, surname, z_number: extra.z, mining_operation: 'Demo Operation', specific_site: 'Demo Site', role: type, created_at: now() });
   };
@@ -22,7 +22,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
   addUser('u-2', 'requester2@example.test', 'user', 'Demo', 'Requester Two', { z: 'Z000002' });
   addUser('a-1', 'admin@example.test', 'admin', 'Demo', 'Controller', { z: 'Z000010' });
   addUser('s-1', 'supervisor@example.test', 'supervisor', 'Demo', 'Supervisor', { z: 'Z000011' });
-  addUser('d-1', 'driver1@example.test', 'driver', 'Demo', 'Driver One', { z: 'Z000021', car: 'Sedan', reg: 'DEMO 001 GP', lat: -26.5150, lng: 27.6050 });
+  addUser('d-1', 'driver1@example.test', 'driver', 'Demo', 'Driver One', { phone: '+27000000021', z: 'Z000021', car: 'Sedan', reg: 'DEMO 001 GP', lat: -26.5150, lng: 27.6050 });
   addUser('d-2', 'driver2@example.test', 'driver', 'Demo', 'Driver Two', { z: 'Z000022', car: 'Minibus', reg: 'DEMO 002 GP', lat: -26.5300, lng: 27.5900 });
 
   const event = (ride_id, actor_id, type, note = null) => events.push({ id: nid('e'), ride_id, actor_id, type, note, at: now() });
@@ -83,6 +83,7 @@ export async function createDemoStore(now = () => new Date().toISOString()) {
       event(r.id, actor.id, action, extra.reason ?? (extra.driver_id ? nameOf(extra.driver_id) : null));
       return { ...r, requester: nameOf(r.user_id), driver_name: r.driver_id ? nameOf(r.driver_id) : null };
     },
+    async contactOf(id) { const u = users.find((x) => x.id === id); return u ? { name: nameOf(id), email: u.email, phone: u.phone ?? null } : null; },
     async addNotice(user_id, ride_id, text) { notices.push({ id: nid('n'), user_id, ride_id, text, created_at: now(), read_at: null }); },
     async listNotices(user_id) { return notices.filter((n) => n.user_id === user_id).slice(-20).reverse(); },
     async markNoticesRead(user_id) { for (const n of notices) if (n.user_id === user_id && !n.read_at) n.read_at = now(); },

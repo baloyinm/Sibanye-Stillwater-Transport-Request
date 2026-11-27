@@ -8,3 +8,4 @@
 - 2026-11-26 · OSRM road route client with fallback (`lib/routing.mjs`) · ADD integrations/osrm-road-route-client · any app wanting road km and minutes
 - 2026-11-26 · Playwright role walk of a full workflow with all settings (`tests/e2e/ui-walk.py`) · ADD ui/role-walk-template · proof pattern for rule W5
 - 2026-11-26 · Multi-role guide walker (reads pack scenarios, signs in per step, screenshots) · MODIFY ui/guide-steps-test-runner · it cannot switch role inside one scenario
+- 2026-11-27 · Plain-JavaScript builds of message-channels-kit, delivery-mode and document-style-kit html path · MODIFY email/message-channels-kit, integrations/email-sms-messaging, email/document-style-kit · three plain-JS projects (this one, rides) vendor them by hand
